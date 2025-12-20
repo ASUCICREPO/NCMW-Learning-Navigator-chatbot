@@ -1,0 +1,34 @@
+Customer Contact: sunitau@thenationalcouncil.org
+
+Mission: The National Council for Mental Wellbeing is a membership organization that drives policy and social change on behalf of more than 3,200 mental health and substance use treatment organizations and the more than 15 million children, adults and families they serve. We advocate for policies to ensure access to high-quality services. We build the capacity of mental health and substance use treatment organizations. And we promote greater understanding of mental wellbeing as a core component of comprehensive health and health care. Through our Mental Health First Aid (MHFA) program, we have trained more than 4 million people in the U.S. to identify, understand and respond to signs and symptoms of mental health and substance use challenges.
+
+Chatbot Idea: The chatbot will be an AI-powered assistant integrated into our Learning Ecosystem to support Mental Health First Aid (MHFA) and other educational programs. It will help instructors, learners, and administrators navigate training resources, answer FAQs, and provide real-time guidance. The chatbot will also assist internal teams by reducing administrative burden and improving access to data-driven insights. 
+
+Name: Learning Navigator
+
+Pain points addressed: In recent years, several urgent factors have escalated the need for a more advanced Learning Ecosystem. The pandemic and related social isolation have made mental health literacy a critical necessity, with MHFA providing a framework for conversations that are safe and supportive.
+
+The demand for the National Council’s educational programming, such as MHFA, is increasing rapidly across the United States. The need for mental health education has never been more critical, particularly as mental health challenges continue to rise, with certain populations, such as youth, rural communities and veterans, at significantly higher risk. Research shows that more than 1 in 5 U.S. adults live with a mental illness, underscoring the urgency to equip people in their communities with the knowledge and skills to respond effectively to crises and making the expansion of MHFA a priority.
+
+Because the demand for MHFA training has surged with educators, public health agencies, employers and community leaders, the National Council has been mobilizing to seek scalable solutions to improve mental health awareness and crisis response, especially in communities with unmet needs. Instructors face significant administrative challenges, including manual invoicing, complex course management and limited visibility into emerging community needs. While we currently have over 30,000 certified MHFA Instructors, less than 9,000 are currently active, due in large part to the complexities and inefficiencies of our current system, that makes facilitating MHFA courses challenging. These inefficiencies create bottlenecks in scaling our training efforts and impede our ability to respond quickly to new demands. As we aim to sustain and accelerate growth, it has become clear that enhancing operational efficiency, streamlining learner processes and improving instructor satisfaction are crucial to meeting rising demand.
+
+Integrating generative AI through the Learning Ecosystem will serve as a transformative solution, enhancing our infrastructure and systems while ensuring that instructors, learners and administrators have the tools they need to work more efficiently, effectively and sustainably.
+
+
+Target Users: MHFA Instructors, Internal staff supporting training operations, Learners (Maybe)
+
+Knowledge base: https://drive.google.com/drive/folders/1KSD7iYe2kkyQZwbOPcTB6kizcUWP24jh?usp=sharing 
+
+UI/UX/Branding Notes: https://drive.google.com/file/d/1NPIvaFmXectIFCPdZHo61NSxESU1-Ve5/view?usp=sharing 
+
+Requirements: 
+	•	English/Spanish
+	•	Personalized recommendations based on user role - behind a login 
+	•	AI-driven escalation to live support - auto create a ticket in zendesk
+	•	Accessibility compliance (WCAG standards)
+	•	Secure data handling and privacy compliance - 
+	•	***Integration with CRM - Microsoft Dynamics - nice to have
+	•	Lead capture
+	•	Admin view - Basic analytics, conversation logs, sentiment analysis
+	•	Citations for every response
+	•	Feedback for responses (thumbs up/thumbs down) - nice to have
