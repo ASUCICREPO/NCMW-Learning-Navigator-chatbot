@@ -181,6 +181,10 @@ User Query
 | **[backend/infrastructure/README.md](backend/infrastructure/README.md)** | CDK infrastructure guide | ⭐ High |
 | **[backend/infrastructure/STEP_2_DYNAMODB.md](backend/infrastructure/STEP_2_DYNAMODB.md)** | DynamoDB setup & trade-offs | High |
 | **[backend/infrastructure/STEP_3_S3.md](backend/infrastructure/STEP_3_S3.md)** | S3 buckets setup & trade-offs | High |
+| **[backend/infrastructure/STEP_4_COGNITO.md](backend/infrastructure/STEP_4_COGNITO.md)** | Cognito authentication & trade-offs | High |
+| **[backend/infrastructure/STEP_5_LAMBDA.md](backend/infrastructure/STEP_5_LAMBDA.md)** | Lambda functions & trade-offs | High |
+| **[backend/infrastructure/STEP_6_API_GATEWAY.md](backend/infrastructure/STEP_6_API_GATEWAY.md)** | API Gateway & trade-offs | High |
+| **[backend/infrastructure/STEP_7_BEDROCK.md](backend/infrastructure/STEP_7_BEDROCK.md)** | Bedrock Claude integration & trade-offs | High |
 
 ### Planning & Learning
 | Document | Description | Priority |
@@ -314,9 +318,11 @@ learning-navigator/
 - ✅ **Step 1**: Project structure initialized
 - ✅ **Step 2**: DynamoDB table configured
 - ✅ **Step 3**: S3 buckets configured
-- ⏳ **Step 4**: Cognito User Pool (next)
-- ⬜ **Step 5**: Lambda functions
-- ⬜ **Step 6**: API Gateway
+- ✅ **Step 4**: Cognito User Pool configured
+- ✅ **Step 5**: Lambda functions configured
+- ✅ **Step 6**: API Gateway configured
+- ✅ **Step 7**: Bedrock Claude integration
+- ⏳ **Step 8**: OpenSearch RAG (next)
 
 ### Infrastructure Progress
 
@@ -325,12 +331,14 @@ learning-navigator/
 │  Step 1: Project Setup       │ ✅ Complete                   │
 │  Step 2: DynamoDB           │ ✅ Complete                   │
 │  Step 3: S3 Buckets         │ ✅ Complete                   │
-│  Step 4: Cognito            │ ⏳ Next                       │
-│  Step 5: Lambda             │ ⬜ Pending                    │
-│  Step 6: API Gateway        │ ⬜ Pending                    │
+│  Step 4: Cognito            │ ✅ Complete                   │
+│  Step 5: Lambda             │ ✅ Complete                   │
+│  Step 6: API Gateway        │ ✅ Complete                   │
+│  Step 7: Bedrock Claude     │ ✅ Complete                   │
+│  Step 8: OpenSearch RAG     │ ⏳ Next                       │
 │                                                               │
 │  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
-│                    You are here ▲                            │
+│                         You are here ▲                       │
 └─────────────────────────────────────────────────────────────┘
 ```
 

@@ -114,11 +114,14 @@ infrastructure/
 **Step 1 Complete**: Project structure initialized ✅
 **Step 2 Complete**: DynamoDB table with single-table design ✅
 **Step 3 Complete**: S3 buckets (PDFs, frontend, logs) ✅
+**Step 4 Complete**: Cognito User Pool (authentication) ✅
+**Step 5 Complete**: Lambda functions (health check, chat) ✅
+**Step 6 Complete**: API Gateway with Cognito authorizer ✅
+**Step 7 Complete**: Bedrock Claude 3.5 Sonnet integration ✅
 
 **Next Steps**:
-- Step 4: Add Cognito User Pool
-- Step 5: Add Lambda functions
-- Step 6: Add API Gateway
+- Step 8: Add OpenSearch for RAG
+- Step 9: Build React frontend
 
 ## Resources Created
 
@@ -127,11 +130,20 @@ infrastructure/
 - S3 bucket: `learning-navigator-frontend` (Step 3)
 - S3 bucket: `learning-navigator-logs` (Step 3)
 - S3 bucket reference: `national-council-s3-pdfs` (existing)
+- Cognito User Pool: `learning-navigator-users` (Step 4)
+- Cognito User Groups: instructors, staff, admins (Step 4)
+- Cognito Client: `learning-navigator-web` (Step 4)
+- Lambda function: `learning-navigator-health` (Step 5)
+- Lambda function: `learning-navigator-chat` with Bedrock (Step 5 + 7)
+- IAM Role with Bedrock permissions: `learning-navigator-lambda-role` (Step 5 + 7)
+- API Gateway: `learning-navigator-api` (Step 6)
+- Cognito Authorizer: JWT validation (Step 6)
+- Endpoints: `GET /health`, `POST /chat` (Step 6)
+- Bedrock: Claude 3.5 Sonnet integration (Step 7)
 
 **Coming Next**:
-- Step 4: Cognito User Pool
-- Step 5: Lambda functions
-- Step 6: API Gateway
+- Step 8: OpenSearch for RAG
+- Step 9: React frontend
 
 ## Environment Variables
 
