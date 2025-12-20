@@ -5,8 +5,8 @@
 [![AWS](https://img.shields.io/badge/AWS-Serverless-orange)](https://aws.amazon.com/)
 [![Bedrock](https://img.shields.io/badge/Bedrock-Claude%203-blue)](https://aws.amazon.com/bedrock/)
 [![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.9+-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
 
 > **📖 New to the project?** Start with [QUICK_START.md](QUICK_START.md) for a guided tour!
 
@@ -175,6 +175,13 @@ User Query
 | **[LANGCHAIN_INTEGRATION_GUIDE.md](LANGCHAIN_INTEGRATION_GUIDE.md)** | LangChain RAG & agents implementation | High |
 | **[KNOWLEDGE_BASE_SETUP.md](KNOWLEDGE_BASE_SETUP.md)** | S3 document processing pipeline | Medium |
 
+### Infrastructure Implementation
+| Document | Description | Priority |
+|----------|-------------|----------|
+| **[backend/infrastructure/README.md](backend/infrastructure/README.md)** | CDK infrastructure guide | ⭐ High |
+| **[backend/infrastructure/STEP_2_DYNAMODB.md](backend/infrastructure/STEP_2_DYNAMODB.md)** | DynamoDB setup & trade-offs | High |
+| **[backend/infrastructure/STEP_3_S3.md](backend/infrastructure/STEP_3_S3.md)** | S3 buckets setup & trade-offs | High |
+
 ### Planning & Learning
 | Document | Description | Priority |
 |----------|-------------|----------|
@@ -188,35 +195,33 @@ User Query
 ### Prerequisites
 
 - **AWS Account** with appropriate permissions
-- **Node.js** 20.x or later
+- **Python** 3.9 or later
 - **AWS CLI** configured
 - **AWS CDK** installed (`npm install -g aws-cdk`)
 - **Git** for version control
 
-### Setup (Coming Soon)
+### Infrastructure Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/national-council/learning-navigator.git
-cd learning-navigator
+git clone https://github.com/ASUCICREPO/NCMW-Learning-Navigator-chatbot.git
+cd NCMW-Learning-Navigator-chatbot
+
+# Navigate to infrastructure directory
+cd backend/infrastructure
+
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
 
 # Install dependencies
-npm install
+pip install -r requirements.txt
 
-# Configure environment
-cp .env.example .env
-# Edit .env with your AWS credentials and configuration
+# Bootstrap CDK (first time only)
+cdk bootstrap
 
-# Deploy infrastructure (dev environment)
-cd infrastructure
-cdk deploy --all --profile dev
-
-# Start frontend development server
-cd ../frontend
-npm run dev
-
-# Open browser
-# Navigate to http://localhost:3000
+# Deploy infrastructure
+cdk deploy
 ```
 
 ### Project Structure
@@ -230,51 +235,26 @@ learning-navigator/
 ├── IMPLEMENTATION_ROADMAP.md      # Development roadmap
 ├── AWS_SERVICES_GUIDE.md          # AWS implementation guide
 │
-├── infrastructure/                # AWS CDK infrastructure code
-│   ├── bin/
-│   │   └── app.ts                 # CDK app entry point
-│   ├── lib/
-│   │   ├── api-stack.ts           # API Gateway, Lambda
-│   │   ├── data-stack.ts          # DynamoDB, S3, RDS
-│   │   ├── ai-stack.ts            # Bedrock, OpenSearch
-│   │   ├── auth-stack.ts          # Cognito
-│   │   ├── monitoring-stack.ts    # CloudWatch, X-Ray
-│   │   └── frontend-stack.ts      # S3, CloudFront
-│   └── cdk.json
+├── backend/                       # Backend code
+│   └── infrastructure/            # AWS CDK infrastructure code (Python)
+│       ├── app.py                 # CDK app entry point
+│       ├── stacks/
+│       │   ├── __init__.py
+│       │   └── backend_stack.py   # Main infrastructure stack
+│       ├── requirements.txt       # Python dependencies
+│       ├── cdk.json              # CDK configuration
+│       ├── README.md             # Infrastructure guide
+│       ├── STEP_2_DYNAMODB.md    # DynamoDB documentation
+│       └── STEP_3_S3.md          # S3 documentation
 │
-├── frontend/                      # React application
-│   ├── src/
-│   │   ├── components/            # React components
-│   │   ├── services/              # API clients
-│   │   ├── hooks/                 # Custom React hooks
-│   │   ├── store/                 # Redux store
-│   │   ├── utils/                 # Utilities
-│   │   └── App.tsx
-│   ├── public/
-│   └── package.json
-│
-├── backend/                       # Lambda functions
-│   ├── functions/
-│   │   ├── chat/                  # Chat-related functions
-│   │   ├── ai/                    # AI service functions
-│   │   ├── user/                  # User management
-│   │   ├── admin/                 # Admin functions
-│   │   └── integrations/          # External integrations
-│   ├── shared/                    # Shared code/layers
-│   │   ├── db/                    # Database utilities
-│   │   ├── auth/                  # Authentication helpers
-│   │   └── utils/                 # Common utilities
-│   └── package.json
+├── frontend/                      # React application (coming soon)
+│   └── ...
 │
 ├── docs/                          # Additional documentation
-│   ├── api/                       # API documentation
-│   ├── user-guides/               # User manuals
-│   └── admin-guides/              # Admin documentation
+│   └── generated-diagrams/        # Architecture diagrams
 │
-└── tests/                         # Test suites
-    ├── unit/                      # Unit tests
-    ├── integration/               # Integration tests
-    └── e2e/                       # End-to-end tests
+└── tests/                         # Test suites (coming soon)
+    └── ...
 ```
 
 ---
@@ -292,11 +272,11 @@ learning-navigator/
 - **Testing**: Jest, React Testing Library, Playwright
 
 ### Backend
-- **Compute**: AWS Lambda (Node.js 20.x)
+- **Compute**: AWS Lambda (Python 3.11)
 - **API**: Amazon API Gateway (REST + WebSocket)
-- **Database**: Amazon DynamoDB
-- **Storage**: Amazon S3
-- **CDN**: Amazon CloudFront
+- **Database**: Amazon DynamoDB (single-table design)
+- **Storage**: Amazon S3 (PDFs, frontend, logs)
+- **CDN**: Amazon CloudFront (planned)
 
 ### AI/ML
 - **LLM**: Amazon Bedrock (Claude 3 Sonnet)
@@ -312,8 +292,8 @@ learning-navigator/
 - **Secrets**: AWS Secrets Manager
 
 ### Infrastructure & DevOps
-- **IaC**: AWS CDK (TypeScript)
-- **CI/CD**: GitHub Actions / AWS CodePipeline
+- **IaC**: AWS CDK (Python)
+- **CI/CD**: GitHub Actions
 - **Monitoring**: CloudWatch, X-Ray
 - **Version Control**: Git / GitHub
 
@@ -326,29 +306,31 @@ learning-navigator/
 
 ## 📊 Project Status
 
-### Current Phase: **Pre-Development** 📋
+### Current Phase: **Infrastructure Setup** 🏗️
 
 - ✅ Requirements gathering complete
 - ✅ Architecture design complete
 - ✅ Implementation roadmap defined
-- ⬜ Stakeholder approval pending
-- ⬜ Team assembly in progress
-- ⬜ AWS infrastructure setup - not started
-- ⬜ Development - not started
+- ✅ **Step 1**: Project structure initialized
+- ✅ **Step 2**: DynamoDB table configured
+- ✅ **Step 3**: S3 buckets configured
+- ⏳ **Step 4**: Cognito User Pool (next)
+- ⬜ **Step 5**: Lambda functions
+- ⬜ **Step 6**: API Gateway
 
-### Timeline
+### Infrastructure Progress
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Phase 0: Pre-Dev          │ Week 1                          │
-│  Phase 1: Foundation       │ Weeks 2-4                       │
-│  Phase 2: AI Integration   │ Weeks 5-7                       │
-│  Phase 3: Core Features    │ Weeks 8-9                       │
-│  Phase 4: Polish & Testing │ Weeks 10-11                     │
-│  Phase 5: Launch           │ Week 12                         │
+│  Step 1: Project Setup       │ ✅ Complete                   │
+│  Step 2: DynamoDB           │ ✅ Complete                   │
+│  Step 3: S3 Buckets         │ ✅ Complete                   │
+│  Step 4: Cognito            │ ⏳ Next                       │
+│  Step 5: Lambda             │ ⬜ Pending                    │
+│  Step 6: API Gateway        │ ⬜ Pending                    │
 │                                                               │
 │  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
-│  You are here ▲                                              │
+│                    You are here ▲                            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -362,20 +344,22 @@ learning-navigator/
 - **Team**: $150k - $240k (3 months, varies by location)
 - **Third-Party**: ~$5k (security audit, accessibility testing)
 
-### Operations (Monthly)
+### Operations (Monthly) - MVP Scale
+
 | Component | Cost |
 |-----------|------|
-| AWS Lambda | $50 |
-| API Gateway | $35 |
-| Bedrock (Claude) | $150 |
-| OpenSearch | $100 |
-| DynamoDB | $25 |
-| S3 + CloudFront | $25 |
-| CloudWatch | $20 |
-| Other Services | $20 |
-| **Total** | **~$425/month** |
+| DynamoDB (on-demand) | $1-2 |
+| S3 Storage + Transfer | $1-2 |
+| Lambda | $10-20 |
+| API Gateway | $10-20 |
+| Bedrock (Claude) | $50-150 |
+| OpenSearch | $50-100 |
+| Cognito | $0-5 |
+| CloudWatch | $5-10 |
+| Other Services | $10-20 |
+| **Total (MVP)** | **~$137-329/month** |
 
-**Note**: Costs scale with usage. Budget $1,000-1,500/month for production.
+**Note**: Costs scale with usage. Budget $500-1,000/month for production.
 
 ---
 
@@ -406,7 +390,7 @@ learning-navigator/
 - ✅ **HIPAA-Compatible** - Sensitive mental health data protection
 - ✅ **WCAG 2.1 Level AA** - Full accessibility compliance
 - ✅ **SOC 2 Type II** - Enterprise security standards
-- ✅ **Data Encryption** - At rest (KMS) and in transit (TLS 1.3)
+- ✅ **Data Encryption** - At rest (AWS-managed) and in transit (TLS 1.3)
 - ✅ **Zero Trust Architecture** - Defense in depth
 - ✅ **Regular Audits** - Security and penetration testing
 
