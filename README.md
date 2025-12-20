@@ -185,6 +185,7 @@ User Query
 | **[backend/infrastructure/STEP_5_LAMBDA.md](backend/infrastructure/STEP_5_LAMBDA.md)** | Lambda functions & trade-offs | High |
 | **[backend/infrastructure/STEP_6_API_GATEWAY.md](backend/infrastructure/STEP_6_API_GATEWAY.md)** | API Gateway & trade-offs | High |
 | **[backend/infrastructure/STEP_7_BEDROCK.md](backend/infrastructure/STEP_7_BEDROCK.md)** | Bedrock Claude integration & trade-offs | High |
+| **[backend/infrastructure/STEP_8_OPENSEARCH.md](backend/infrastructure/STEP_8_OPENSEARCH.md)** | OpenSearch RAG & trade-offs | High |
 
 ### Planning & Learning
 | Document | Description | Priority |
@@ -322,7 +323,8 @@ learning-navigator/
 - ✅ **Step 5**: Lambda functions configured
 - ✅ **Step 6**: API Gateway configured
 - ✅ **Step 7**: Bedrock Claude integration
-- ⏳ **Step 8**: OpenSearch RAG (next)
+- ✅ **Step 8**: OpenSearch RAG
+- ⏳ **Step 9**: Lambda Layer + Frontend (next)
 
 ### Infrastructure Progress
 
@@ -335,7 +337,8 @@ learning-navigator/
 │  Step 5: Lambda             │ ✅ Complete                   │
 │  Step 6: API Gateway        │ ✅ Complete                   │
 │  Step 7: Bedrock Claude     │ ✅ Complete                   │
-│  Step 8: OpenSearch RAG     │ ⏳ Next                       │
+│  Step 8: OpenSearch RAG     │ ✅ Complete                   │
+│  Step 9: Lambda Layer       │ ⏳ Next                       │
 │                                                               │
 │  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
 │                         You are here ▲                       │

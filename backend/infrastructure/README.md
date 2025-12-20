@@ -118,10 +118,11 @@ infrastructure/
 **Step 5 Complete**: Lambda functions (health check, chat) ✅
 **Step 6 Complete**: API Gateway with Cognito authorizer ✅
 **Step 7 Complete**: Bedrock Claude 3.5 Sonnet integration ✅
+**Step 8 Complete**: OpenSearch + RAG (vector search) ✅
 
 **Next Steps**:
-- Step 8: Add OpenSearch for RAG
-- Step 9: Build React frontend
+- Step 9: Create Lambda Layer for RAG dependencies
+- Step 10: Build React frontend
 
 ## Resources Created
 
@@ -134,16 +135,18 @@ infrastructure/
 - Cognito User Groups: instructors, staff, admins (Step 4)
 - Cognito Client: `learning-navigator-web` (Step 4)
 - Lambda function: `learning-navigator-health` (Step 5)
-- Lambda function: `learning-navigator-chat` with Bedrock (Step 5 + 7)
-- IAM Role with Bedrock permissions: `learning-navigator-lambda-role` (Step 5 + 7)
+- Lambda function: `learning-navigator-chat` with Bedrock + RAG (Step 5 + 7 + 8)
+- Lambda function: `learning-navigator-doc-processor` (Step 8)
+- IAM Role with Bedrock + OpenSearch permissions: `learning-navigator-lambda-role` (Step 5 + 7 + 8)
 - API Gateway: `learning-navigator-api` (Step 6)
 - Cognito Authorizer: JWT validation (Step 6)
 - Endpoints: `GET /health`, `POST /chat` (Step 6)
-- Bedrock: Claude 3.5 Sonnet integration (Step 7)
+- Bedrock: Claude 3.5 Sonnet + Titan Embeddings (Step 7 + 8)
+- OpenSearch: Vector search domain (Step 8)
 
 **Coming Next**:
-- Step 8: OpenSearch for RAG
-- Step 9: React frontend
+- Step 9: Lambda Layer for dependencies
+- Step 10: React frontend
 
 ## Environment Variables
 

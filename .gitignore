@@ -1,0 +1,318 @@
+# Learning Navigator - Git Ignore
+
+# =====================================================================
+# AWS & DEPLOYMENT
+# =====================================================================
+
+# CDK
+*.swp
+.cdk.staging/
+cdk.out/
+cdk.context.json
+outputs.json
+
+# AWS Credentials (NEVER commit these!)
+.aws/
+*.pem
+*.key
+credentials
+config
+
+# Lambda Layer artifacts
+lambda-layer/
+rag-dependencies-layer.zip
+lambda-layer-arn.txt
+
+# CloudFormation outputs
+stack-outputs.json
+
+# =====================================================================
+# PYTHON
+# =====================================================================
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.log
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# =====================================================================
+# NODE.JS / REACT
+# =====================================================================
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Production build
+/frontend/build
+/frontend/dist
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =====================================================================
+# IDEs & EDITORS
+# =====================================================================
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# =====================================================================
+# OPERATING SYSTEM
+# =====================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# =====================================================================
+# SENSITIVE DATA (IMPORTANT!)
+# =====================================================================
+
+# Never commit these!
+secrets/
+*.secret
+*.secrets
+credentials.json
+service-account.json
+private-key.json
+
+# Configuration with secrets
+config.prod.json
+config.staging.json
+*-secrets.yaml
+*-secrets.yml
+
+# API keys and tokens
+.api-keys
+*.token
+*.jwt
+
+# Database dumps
+*.sql
+*.sqlite
+*.db
+
+# Logs with potentially sensitive data
+logs/
+*.log
+combined.log
+error.log
+access.log
+
+# =====================================================================
+# TESTING & TEMPORARY
+# =====================================================================
+
+# Test files
+test-*.txt
+test-*.pdf
+sample-*.pdf
+mock-*.json
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+*.orig
+
+# CDK deployment logs
+/tmp/cdk-deploy.log
+
+# =====================================================================
+# PROJECT-SPECIFIC
+# =====================================================================
+
+# Generated documentation
+/docs/generated/
+api-docs/
+
+# Frontend build artifacts
+/frontend/.next/
+/frontend/out/
+
+# Lambda deployment packages
+lambda-packages/
+*.zip
+
+# OpenSearch data (if running locally)
+opensearch-data/
+elasticsearch-data/
+
+# PDF uploads (test files)
+test-uploads/
+sample-documents/
+
+# Analytics & reports
+reports/
+analytics/
+*.csv
+*.xlsx
+
+# Screenshots (if any)
+screenshots/
+images/test-*
+
+# =====================================================================
+# KEEP THESE FILES
+# =====================================================================
+
+# Important: DO commit these
+!.gitignore
+!README.md
+!requirements.txt
+!package.json
+!cdk.json
+!tsconfig.json
+
+# Keep example/template files
+!.env.example
+!config.example.json
+!credentials.example.json
+
+# Keep documentation
+!docs/**/*.md
+!*.md
+
+# Keep infrastructure code
+!backend/infrastructure/**/*.py
+!backend/lambda/functions/**/*.py
+
+# =====================================================================
+# NOTES
+# =====================================================================
+
+# This .gitignore protects:
+# 1. AWS credentials and secrets
+# 2. Build artifacts and caches
+# 3. Virtual environments
+# 4. IDE-specific files
+# 5. OS-specific files
+# 6. Temporary test data
+# 7. Sensitive logs and database dumps
+
+# Always review files before committing:
+# - git status
+# - git diff
+# - Ensure no secrets in committed files

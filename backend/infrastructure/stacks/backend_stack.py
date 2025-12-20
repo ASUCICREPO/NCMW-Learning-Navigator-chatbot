@@ -171,7 +171,7 @@ class BackendStack(Stack):
             # - KEYS_ONLY: Copy only keys (cheapest, may need main table lookup)
             # - INCLUDE: Copy specific attributes (balanced)
             # We chose ALL for analytics speed
-            projection=dynamodb.Projection.all(),
+            projection_type=dynamodb.ProjectionType.ALL,
         )
 
         # =====================================================================
@@ -1051,9 +1051,10 @@ class BackendStack(Stack):
         """
 
         # Get Lambda code path (relative to this file)
+        # From: backend/infrastructure/stacks/backend_stack.py
+        # To: backend/lambda/functions
         lambda_code_path = os.path.join(
             os.path.dirname(__file__),
-            '..',
             '..',
             '..',
             'lambda',
