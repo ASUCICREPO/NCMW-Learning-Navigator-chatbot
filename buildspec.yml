@@ -1,0 +1,107 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+      python: 3.9
+    commands:
+      - echo "Installing dependencies..."
+      - npm install -g aws-cdk
+      - pip3 install aws-cdk-lib constructs
+
+  pre_build:
+    commands:
+      - echo "Pre-build phase started on $(date)"
+      - echo "Current directory: $(pwd)"
+      - echo "Listing files..."
+      - ls -la
+
+      # Install frontend dependencies
+      - echo "Installing frontend dependencies..."
+      - cd frontend
+      - npm ci
+      - cd ..
+
+      # Install backend dependencies
+      - echo "Installing backend dependencies..."
+      - cd cdk_backend
+      - npm ci
+      - cd ..
+
+  build:
+    commands:
+      - echo "Build phase started on $(date)"
+
+      # Build frontend
+      - echo "Building frontend..."
+      - cd frontend
+      - npm run build
+      - cd ..
+
+      # Deploy backend infrastructure
+      - echo "Deploying backend with CDK..."
+      - cd cdk_backend
+      - npm run build
+      - echo "Bootstrapping CDK (no approval)..."
+      - cdk bootstrap --require-approval never -c githubToken=${GITHUB_TOKEN} -c githubOwner=${GITHUB_OWNER} -c adminEmail=${ADMIN_EMAIL} -c githubRepo=${GITHUB_REPO} || true
+      - echo "Deploying all CDK stacks..."
+      - cdk deploy --all --require-approval never -c githubToken=${GITHUB_TOKEN} -c githubOwner=${GITHUB_OWNER} -c githubRepo=${GITHUB_REPO} -c adminEmail=${ADMIN_EMAIL}
+      - cd ..
+
+      # Get API Gateway URL from CDK outputs
+      - echo "Extracting CDK outputs..."
+      - export API_URL=$(aws cloudformation describe-stacks --stack-name BlueberryStackLatest --query 'Stacks[0].Outputs[?OutputKey==`ApiEndpoint`].OutputValue' --output text)
+      - echo "API Gateway URL: $API_URL"
+
+      # Update frontend environment variables
+      - echo "Updating frontend runtime configuration..."
+      - cd frontend/build
+      - |
+        cat > env-config.js << EOF
+        window._env_ = {
+          REACT_APP_API_URL: "$API_URL",
+          REACT_APP_USER_POOL_ID: "$USER_POOL_ID",
+          REACT_APP_USER_POOL_CLIENT_ID: "$USER_POOL_CLIENT_ID",
+          REACT_APP_BEDROCK_AGENT_ID: "$BEDROCK_AGENT_ID",
+          REACT_APP_BEDROCK_AGENT_ALIAS_ID: "TSTALIASID"
+        };
+        EOF
+      - cd ../..
+
+  post_build:
+    commands:
+      - echo "Post-build phase started on $(date)"
+
+      # Deploy frontend to S3 (only if S3_BUCKET_NAME is set)
+      - |
+        if [ ! -z "$S3_BUCKET_NAME" ]; then
+          echo "Deploying frontend to S3...";
+          aws s3 sync frontend/build/ s3://${S3_BUCKET_NAME}/ --delete --cache-control "public,max-age=31536000,immutable" --exclude "index.html" --exclude "env-config.js";
+          aws s3 cp frontend/build/index.html s3://${S3_BUCKET_NAME}/index.html --cache-control "public,max-age=0,must-revalidate";
+          aws s3 cp frontend/build/env-config.js s3://${S3_BUCKET_NAME}/env-config.js --cache-control "public,max-age=0,must-revalidate";
+        else
+          echo "S3_BUCKET_NAME not set, skipping frontend deployment";
+        fi
+
+      # Invalidate CloudFront cache (only if CLOUDFRONT_DISTRIBUTION_ID is set)
+      - |
+        if [ ! -z "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
+          echo "Invalidating CloudFront cache...";
+          aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} --paths "/*";
+        else
+          echo "CLOUDFRONT_DISTRIBUTION_ID not set, skipping CloudFront invalidation";
+        fi
+
+      - echo "Build completed on $(date)"
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: frontend/build
+  name: frontend-build
+
+cache:
+  paths:
+    - 'frontend/node_modules/**/*'
+    - 'cdk_backend/node_modules/**/*'

@@ -1,443 +1,401 @@
-# Learning Navigator - AI-Powered Chatbot
+# Learning Navigator - MHFA Learning Ecosystem AI Assistant
 
-> An intelligent assistant for the Mental Health First Aid (MHFA) Learning Ecosystem
+**Live Application:** https://main.d1disyogbqgwn4.amplifyapp.com
 
-[![AWS](https://img.shields.io/badge/AWS-Serverless-orange)](https://aws.amazon.com/)
-[![Bedrock](https://img.shields.io/badge/Bedrock-Claude%203-blue)](https://aws.amazon.com/bedrock/)
-[![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org/)
-[![Python](https://img.shields.io/badge/Python-3.9+-blue)](https://www.python.org/)
-[![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
+A comprehensive chatbot application that provides real-time guidance for the Mental Health First Aid (MHFA) Learning Ecosystem, powered by AWS Bedrock and featuring an administrative dashboard for content management and analytics.
 
-> **📖 New to the project?** Start with [QUICK_START.md](QUICK_START.md) for a guided tour!
+This application combines natural language processing capabilities with a knowledge base of MHFA training resources to deliver accurate, context-aware responses to instructors, learners, and administrators. The system includes a user-friendly chat interface, multilingual support, and an administrative portal for managing content and monitoring user interactions.
 
----
+The application features a serverless architecture built on AWS services, with real-time communication through WebSockets, secure file management, and detailed analytics. Key features include:
+- AI-powered responses using AWS Bedrock with Claude 3.5 Sonnet
+- **Personalized Recommendations** - Role-based content for Instructors, Staff, and Learners
+- **Guest Access** - No login required for main chatbot (guest/anonymous mode)
+- **Language Toggle** - Switch between English and Spanish with one click
+- Automated email notifications for queries requiring expert attention
+- Secure document management system for knowledge base updates
+- Real-time chat with streaming responses
+- Administrative dashboard with analytics and content management
+- Multi-language support (English/Spanish) with Amazon Translate integration
+- Session logging and sentiment analysis capabilities
+- User profile management with role-specific quick actions
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Documentation](#documentation)
-- [Technology Stack](#technology-stack)
-- [Project Status](#project-status)
-
----
-
-## 🎯 Overview
-
-**Learning Navigator** is an AI-powered chatbot designed to support The National Council for Mental Wellbeing's MHFA program by:
-
-- Reducing administrative burden on instructors and staff
-- Providing instant access to training resources and information
-- Automating support ticket creation and escalation
-- Improving mental health education accessibility
-
-### Target Users
-- 🎓 **MHFA Instructors** - Course management, resources, invoicing
-- 👥 **Internal Staff** - Operational guidance, system support
-- 👨‍💼 **Administrators** - Analytics, configuration, user management
-- 📚 **Learners** *(Phase 2)* - Course information, learning resources
-
----
-
-## ✨ Features
-
-### Core Capabilities
-- ✅ **Conversational AI** - Natural language understanding with Claude 3 Sonnet
-- ✅ **Bilingual Support** - Full English and Spanish functionality
-- ✅ **Role-Based Personalization** - Customized responses based on user role
-- ✅ **Smart Knowledge Base** - RAG (Retrieval-Augmented Generation) for accurate answers
-- ✅ **Source Citations** - Every response includes verifiable sources
-- ✅ **Real-Time Streaming** - Live response generation for better UX
-- ✅ **Intelligent Escalation** - Auto-creates Zendesk tickets when human help is needed
-- ✅ **Analytics Dashboard** - Conversation logs, metrics, sentiment analysis
-- ✅ **Feedback System** - Thumbs up/down for continuous improvement
-- ✅ **Accessibility** - WCAG 2.1 Level AA compliant
-- ✅ **Enterprise Security** - HIPAA-compatible, encrypted, secure authentication
-
----
-
-## 🏗️ Architecture
-
-### High-Level Architecture
-
+## Repository Structure
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      CLIENT LAYER                            │
-│  ┏━━━━━━━━━━━━┓  ┏━━━━━━━━━━━━┓  ┏━━━━━━━━━━━━┓          │
-│  ┃  Web App   ┃  ┃   Admin    ┃  ┃  Mobile    ┃          │
-│  ┃  (React)   ┃  ┃ Dashboard  ┃  ┃ Responsive ┃          │
-│  ┗━━━━━━━━━━━━┛  ┗━━━━━━━━━━━━┛  ┗━━━━━━━━━━━━┛          │
-└──────────────────────────┬──────────────────────────────────┘
-                           │ HTTPS/WSS
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│              API GATEWAY (REST + WebSocket)                  │
-│  • Authentication (Cognito)  • Rate Limiting  • Validation  │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-        ┌──────────────────┼──────────────────┐
-        ▼                  ▼                  ▼
-┏━━━━━━━━━━━━━┓   ┏━━━━━━━━━━━━━┓   ┏━━━━━━━━━━━━━┓
-┃ APPLICATION ┃   ┃   AI/ML     ┃   ┃ INTEGRATION ┃
-┃   LAYER     ┃   ┃   LAYER     ┃   ┃    LAYER    ┃
-┣━━━━━━━━━━━━━┫   ┣━━━━━━━━━━━━━┫   ┣━━━━━━━━━━━━━┫
-┃   Lambda    ┃   ┃  Bedrock    ┃   ┃  Zendesk    ┃
-┃ Functions   ┃◄──┃  (Claude)   ┃   ┃     API     ┃
-┃             ┃   ┃             ┃   ┃             ┃
-┃ • Chat API  ┃   ┃ OpenSearch  ┃   ┃ Dynamics    ┃
-┃ • Auth      ┃   ┃  (Vector    ┃   ┃    365      ┃
-┃ • Analytics ┃   ┃   Search)   ┃   ┃ (Phase 2)   ┃
-┃ • Admin     ┃   ┃             ┃   ┃             ┃
-┗━━━━━━━━━━━━━┛   ┗━━━━━━━━━━━━━┛   ┗━━━━━━━━━━━━━┛
-        │                  │                  │
-        └──────────────────┼──────────────────┘
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      DATA LAYER                              │
-│  ┏━━━━━━━━━━━┓   ┏━━━━━━━━━━━┓   ┏━━━━━━━━━━━┓           │
-│  ┃ DynamoDB  ┃   ┃ S3 Buckets┃   ┃    RDS    ┃           │
-│  ┃           ┃   ┃           ┃   ┃ (Optional)┃           │
-│  ┃ Sessions  ┃   ┃ Documents ┃   ┃           ┃           │
-│  ┃ Users     ┃   ┃ Logs      ┃   ┃ Analytics ┃           │
-│  ┃ Chats     ┃   ┃ Knowledge ┃   ┃ Reporting ┃           │
-│  ┃ Feedback  ┃   ┃ Base      ┃   ┃           ┃           │
-│  ┗━━━━━━━━━━━┛   ┗━━━━━━━━━━━┛   ┗━━━━━━━━━━━┛           │
-└─────────────────────────────────────────────────────────────┘
+.
+├── buildspec.yml              # AWS CodeBuild configuration for CI/CD
+├── cdk_backend/              # AWS CDK infrastructure code
+│   ├── bin/                  # CDK app entry point
+│   ├── lambda/               # Lambda functions for various services
+│   │   ├── adminFile/        # Admin file management handler
+│   │   ├── cfEvaluator/      # Chat flow evaluation logic
+│   │   ├── email/           # Email notification service
+│   │   ├── logclassifier/   # Session log classification
+│   │   ├── escalatedQueries/ # Escalated query management
+│   │   ├── responseFeedback/ # User feedback collection
+│   │   ├── userProfile/      # User profile management
+│   │   └── websocketHandler/ # Real-time communication handler
+│   └── lib/                 # CDK stack definitions
+├── docs/                     # 📚 All project documentation
+│   ├── architecture/         # Architecture diagrams and designs
+│   ├── deployment/          # Deployment guides and configurations
+│   ├── features/            # Feature documentation and guides
+│   ├── guides/              # User and developer guides
+│   └── testing/             # Test reports and quality assurance
+├── scripts/                  # 🛠️ Utility scripts
+│   ├── deploy.sh            # Automated deployment script
+│   ├── extract_pdf_urls.py  # PDF URL extraction utility
+│   └── test_admin_apis.py   # API testing script
+└── frontend/                # React-based web application
+    ├── public/              # Static assets (favicon, logos, manifest)
+    └── src/
+        ├── Components/      # React components for UI
+        ├── Assets/          # Images, icons, and media files
+        └── utilities/       # Shared utilities and contexts
 ```
 
-### RAG (Retrieval-Augmented Generation) Flow
+# Deployment Instructions
+## Common Prerequisites
 
-```
-User Query
-    │
-    ▼
-┌─────────────────────────────────────┐
-│ 1. Query Processing                 │
-│    • Language detection             │
-│    • Intent classification          │
-└──────────────┬──────────────────────┘
-               ▼
-┌─────────────────────────────────────┐
-│ 2. Knowledge Base Search            │
-│    • Generate query embedding       │
-│    • Hybrid search (keyword +       │
-│      semantic) in OpenSearch        │
-│    • Filter by user role            │
-└──────────────┬──────────────────────┘
-               ▼
-┌─────────────────────────────────────┐
-│ 3. Context Retrieval                │
-│    • Top 5 relevant documents       │
-│    • Extract text chunks            │
-│    • Include source metadata        │
-└──────────────┬──────────────────────┘
-               ▼
-┌─────────────────────────────────────┐
-│ 4. Prompt Construction              │
-│    • System prompt (role-based)     │
-│    • Retrieved context              │
-│    • Conversation history           │
-│    • User query                     │
-└──────────────┬──────────────────────┘
-               ▼
-┌─────────────────────────────────────┐
-│ 5. Bedrock (Claude) Invocation      │
-│    • Stream response generation     │
-│    • Include citations              │
-└──────────────┬──────────────────────┘
-               ▼
-┌─────────────────────────────────────┐
-│ 6. Post-Processing                  │
-│    • Sentiment analysis             │
-│    • Escalation check               │
-│    • Save to database               │
-│    • Stream to user (WebSocket)     │
-└─────────────────────────────────────┘
-```
+- Fork this repository to your own GitHub account (required for deployment and CI/CD):
+  1. Navigate to your forked repository URL
+  2. Click the "Fork" button in the top right corner
+  3. Select your GitHub account as the destination
+  4. Wait for the forking process to complete
+  5. You'll now have your own copy at https://github.com/YOUR-USERNAME/ncwm_chatbot_2
 
----
+- **(Optional)** Obtain a GitHub personal access token (only required for private repositories):
+  - **Note**: If your repository is public, you can skip this step
+  - For private repositories only:
+    1. Go to GitHub Settings > Developer Settings > Personal Access Tokens > Tokens (classic)
+    2. Click "Generate new token (classic)"
+    3. Give the token a name and select the "repo" and "admin:repo_hook" scope
+    4. Click "Generate token" and save the token securely
+  - For detailed instructions, see:
+    - https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
 
-## 📚 Documentation
+- Verify your admin email in SES:
+  1. AWS Console → SES → Verified Identities
+  2. Click **Create identity**
+  3. Select **Email address** and enter your admin email
+  4. Click **Create identity**
+  5. Check your email inbox and click the verification link
+  6. Wait until the identity status shows **Verified**
 
-### Core Documentation (Start Here)
-| Document | Description | Priority |
-|----------|-------------|----------|
-| **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)** | Executive overview - read this first! | ⭐ High |
-| **[REQUIREMENTS.md](REQUIREMENTS.md)** | Complete functional & non-functional requirements | ⭐ High |
-| **[SYSTEM_ARCHITECTURE.md](SYSTEM_ARCHITECTURE.md)** | Full architecture design with AWS services | ⭐ High |
-| **[IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md)** | 12-week development plan | ⭐ High |
+- Enable the following AWS Bedrock models in your AWS account:
+  - `TITAN_EMBED_TEXT_V2_1024`
+  - `ANTHROPIC_CLAUDE_HAIKU_V1_0`
+  - `ANTHROPIC_CLAUDE_3_5_SONNET_V2_0`
+  - `NOVA_LITE`
 
-### Technical Guides
-| Document | Description | Priority |
-|----------|-------------|----------|
-| **[AWS_SERVICES_GUIDE.md](AWS_SERVICES_GUIDE.md)** | AWS implementation with code examples | High |
-| **[LANGCHAIN_INTEGRATION_GUIDE.md](LANGCHAIN_INTEGRATION_GUIDE.md)** | LangChain RAG & agents implementation | High |
-| **[KNOWLEDGE_BASE_SETUP.md](KNOWLEDGE_BASE_SETUP.md)** | S3 document processing pipeline | Medium |
+  To request access to these models:
+  1. Navigate to the AWS Bedrock console
+  2. Click "Model access" in the left navigation pane
+  3. Click "Manage model access."
+  4. Find each model in the list and select the checkbox next to it
+  5. Click "Save changes" at the bottom of the page
+  6. Wait for model access to be granted (usually within minutes)
+  7. Verify access by checking the "Status" column shows "Access granted"
 
-### Infrastructure Implementation
-| Document | Description | Priority |
-|----------|-------------|----------|
-| **[backend/infrastructure/README.md](backend/infrastructure/README.md)** | CDK infrastructure guide | ⭐ High |
-| **[backend/infrastructure/STEP_2_DYNAMODB.md](backend/infrastructure/STEP_2_DYNAMODB.md)** | DynamoDB setup & trade-offs | High |
-| **[backend/infrastructure/STEP_3_S3.md](backend/infrastructure/STEP_3_S3.md)** | S3 buckets setup & trade-offs | High |
-| **[backend/infrastructure/STEP_4_COGNITO.md](backend/infrastructure/STEP_4_COGNITO.md)** | Cognito authentication & trade-offs | High |
-| **[backend/infrastructure/STEP_5_LAMBDA.md](backend/infrastructure/STEP_5_LAMBDA.md)** | Lambda functions & trade-offs | High |
-| **[backend/infrastructure/STEP_6_API_GATEWAY.md](backend/infrastructure/STEP_6_API_GATEWAY.md)** | API Gateway & trade-offs | High |
-| **[backend/infrastructure/STEP_7_BEDROCK.md](backend/infrastructure/STEP_7_BEDROCK.md)** | Bedrock Claude integration & trade-offs | High |
-| **[backend/infrastructure/STEP_8_OPENSEARCH.md](backend/infrastructure/STEP_8_OPENSEARCH.md)** | OpenSearch RAG & trade-offs | High |
+  Note: If you don't see the option to enable a model, ensure your AWS account
+  and region support Bedrock model access. Contact AWS Support if needed.
+- AWS Account Permissions
+   - Ensure permissions to create and manage AWS resources like S3, Lambda, Knowledge Bases, AI Agents, Neptune, Amplify, Websocket, etc.
+   - [AWS IAM Policies and Permissions](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html)
 
-### Planning & Learning
-| Document | Description | Priority |
-|----------|-------------|----------|
-| **[LEARNING_PATH.md](LEARNING_PATH.md)** | Your week-by-week learning guide | Medium |
-| **[QUESTIONS_FOR_CUSTOMER.md](QUESTIONS_FOR_CUSTOMER.md)** | Questions needing answers | High |
 
----
-
-## 🚀 Quick Start
-
+## Deployment Using AWS CodeBuild and AWS Cloudshell
 ### Prerequisites
 
-- **AWS Account** with appropriate permissions
-- **Python** 3.9 or later
-- **AWS CLI** configured
-- **AWS CDK** installed (`npm install -g aws-cdk`)
-- **Git** for version control
+- Have access to CodeBuild and AWS Cloudshell
 
-### Infrastructure Setup
+### Deployment
 
+1. Open AWS CloudShell in your AWS Console:
+   - Click the CloudShell icon in the AWS Console navigation bar
+   - Wait for the CloudShell environment to initialize
+
+2. Clone the repository (Make sure to have your own forked copy of the repo and replace the link with the forked repository link):
 ```bash
-# Clone the repository
-git clone https://github.com/ASUCICREPO/NCMW-Learning-Navigator-chatbot.git
-cd NCMW-Learning-Navigator-chatbot
-
-# Navigate to infrastructure directory
-cd backend/infrastructure
-
-# Create virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Bootstrap CDK (first time only)
-cdk bootstrap
-
-# Deploy infrastructure
-cdk deploy
+git clone https://github.com/<YOUR-USERNAME>/ncwm_chatbot_2
+cd ncwm_chatbot_2/
 ```
 
-### Project Structure
-
-```
-learning-navigator/
-├── README.md                      # This file
-├── PROJECT_SUMMARY.md             # Executive summary
-├── REQUIREMENTS.md                # Requirements specification
-├── SYSTEM_ARCHITECTURE.md         # Architecture documentation
-├── IMPLEMENTATION_ROADMAP.md      # Development roadmap
-├── AWS_SERVICES_GUIDE.md          # AWS implementation guide
-│
-├── backend/                       # Backend code
-│   └── infrastructure/            # AWS CDK infrastructure code (Python)
-│       ├── app.py                 # CDK app entry point
-│       ├── stacks/
-│       │   ├── __init__.py
-│       │   └── backend_stack.py   # Main infrastructure stack
-│       ├── requirements.txt       # Python dependencies
-│       ├── cdk.json              # CDK configuration
-│       ├── README.md             # Infrastructure guide
-│       ├── STEP_2_DYNAMODB.md    # DynamoDB documentation
-│       └── STEP_3_S3.md          # S3 documentation
-│
-├── frontend/                      # React application (coming soon)
-│   └── ...
-│
-├── docs/                          # Additional documentation
-│   └── generated-diagrams/        # Architecture diagrams
-│
-└── tests/                         # Test suites (coming soon)
-    └── ...
+3. Deploy using the deployment script (recommended):
+The script would prompt you for variables needed for deployment.
+```bash
+chmod +x deploy.sh
+./deploy.sh
 ```
 
----
+## Manual CDK Deployment
+### Prerequisites
 
-## 🛠️ Technology Stack
+1. **AWS CLI**: To interact with AWS services and set up credentials.
 
-### Frontend
-- **Framework**: React 18 with TypeScript
-- **State Management**: Redux Toolkit
-- **Styling**: Tailwind CSS / Material-UI
-- **Routing**: React Router v6
-- **Authentication**: AWS Amplify
-- **Real-Time**: Native WebSocket API
-- **Internationalization**: i18next
-- **Testing**: Jest, React Testing Library, Playwright
+   - [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
 
-### Backend
-- **Compute**: AWS Lambda (Python 3.11)
-- **API**: Amazon API Gateway (REST + WebSocket)
-- **Database**: Amazon DynamoDB (single-table design)
-- **Storage**: Amazon S3 (PDFs, frontend, logs)
-- **CDN**: Amazon CloudFront (planned)
+2. **npm**
+   - npm is required to install AWS CDK. Install npm by installing Node.js:
+     - [Download Node.js](https://nodejs.org/) (includes npm).
+   - Verify npm installation:
+     ```bash
+     npm --version
+     ```
+3. **AWS CDK**: For defining cloud infrastructure in code.
+   - [Install AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)
+     ```bash
+     npm install -g aws-cdk
+     ```
 
-### AI/ML
-- **LLM**: Amazon Bedrock (Claude 3 Sonnet)
-- **Vector Search**: Amazon OpenSearch
-- **Embeddings**: Amazon Titan Embeddings
-- **Sentiment Analysis**: Amazon Comprehend
-- **Translation**: Amazon Translate
+4. **Docker**: Required to build and run Docker images for the ECS tasks.
+   - [Install Docker](https://docs.docker.com/get-docker/)
+   - Verify installation:
+     ```bash
+     docker --version
+     ```
 
-### Security & Auth
-- **Authentication**: AWS Cognito
-- **WAF**: AWS WAF
-- **Encryption**: AWS KMS
-- **Secrets**: AWS Secrets Manager
+### Deployment
 
-### Infrastructure & DevOps
-- **IaC**: AWS CDK (Python)
-- **CI/CD**: GitHub Actions
-- **Monitoring**: CloudWatch, X-Ray
-- **Version Control**: Git / GitHub
-
-### Integrations
-- **Support Ticketing**: Zendesk API
-- **CRM**: Microsoft Dynamics 365 (Phase 2)
-- **LMS**: Custom integration (based on customer's LMS)
-
----
-
-## 📊 Project Status
-
-### Current Phase: **Infrastructure Setup** 🏗️
-
-- ✅ Requirements gathering complete
-- ✅ Architecture design complete
-- ✅ Implementation roadmap defined
-- ✅ **Step 1**: Project structure initialized
-- ✅ **Step 2**: DynamoDB table configured
-- ✅ **Step 3**: S3 buckets configured
-- ✅ **Step 4**: Cognito User Pool configured
-- ✅ **Step 5**: Lambda functions configured
-- ✅ **Step 6**: API Gateway configured
-- ✅ **Step 7**: Bedrock Claude integration
-- ✅ **Step 8**: OpenSearch RAG
-- ⏳ **Step 9**: Lambda Layer + Frontend (next)
-
-### Infrastructure Progress
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Step 1: Project Setup       │ ✅ Complete                   │
-│  Step 2: DynamoDB           │ ✅ Complete                   │
-│  Step 3: S3 Buckets         │ ✅ Complete                   │
-│  Step 4: Cognito            │ ✅ Complete                   │
-│  Step 5: Lambda             │ ✅ Complete                   │
-│  Step 6: API Gateway        │ ✅ Complete                   │
-│  Step 7: Bedrock Claude     │ ✅ Complete                   │
-│  Step 8: OpenSearch RAG     │ ✅ Complete                   │
-│  Step 9: Lambda Layer       │ ⏳ Next                       │
-│                                                               │
-│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
-│                         You are here ▲                       │
-└─────────────────────────────────────────────────────────────┘
+1. Clone the repository (Make sure to fork the repository first):
+```bash
+git clone https://github.com/<YOUR-USERNAME>/ncwm_chatbot_2
+cd ncwm_chatbot_2/
 ```
 
-### MVP Target: **End of Month 3** 🎯
+2. **Set Up Your Environment**:
+Configure AWS CLI with your AWS account credentials:
+  ```bash
+  aws configure
+  ```
 
----
+3. Install dependencies:
+```bash
+cd cdk_backend
+npm install
+```
 
-## 💰 Estimated Costs
+4. Bootstrap CDK:
+```bash
+# For public repositories (recommended):
+cdk bootstrap --all \
+  -c githubOwner=YOUR_GITHUB_USERNAME \
+  -c githubRepo=ncwm_chatbot_2 \
+  -c adminEmail=YOUR_ADMIN_EMAIL
 
-### Development (One-Time)
-- **Team**: $150k - $240k (3 months, varies by location)
-- **Third-Party**: ~$5k (security audit, accessibility testing)
+# For private repositories (add githubToken):
+cdk bootstrap --all \
+  -c githubToken=YOUR_GITHUB_TOKEN \
+  -c githubOwner=YOUR_GITHUB_USERNAME \
+  -c githubRepo=ncwm_chatbot_2 \
+  -c adminEmail=YOUR_ADMIN_EMAIL
+```
 
-### Operations (Monthly) - MVP Scale
+5. Deploy the stack:
+```bash
+# For public repositories (recommended):
+cdk deploy --all \
+  -c githubOwner=YOUR_GITHUB_USERNAME \
+  -c githubRepo=ncwm_chatbot_2 \
+  -c adminEmail=YOUR_ADMIN_EMAIL
 
-| Component | Cost |
-|-----------|------|
-| DynamoDB (on-demand) | $1-2 |
-| S3 Storage + Transfer | $1-2 |
-| Lambda | $10-20 |
-| API Gateway | $10-20 |
-| Bedrock (Claude) | $50-150 |
-| OpenSearch | $50-100 |
-| Cognito | $0-5 |
-| CloudWatch | $5-10 |
-| Other Services | $10-20 |
-| **Total (MVP)** | **~$137-329/month** |
+# For private repositories (add githubToken):
+cdk deploy --all \
+  -c githubToken=YOUR_GITHUB_TOKEN \
+  -c githubOwner=YOUR_GITHUB_USERNAME \
+  -c githubRepo=ncwm_chatbot_2 \
+  -c adminEmail=YOUR_ADMIN_EMAIL
+```
 
-**Note**: Costs scale with usage. Budget $500-1,000/month for production.
+## Usage
 
----
+Once the infrastructure is deployed using either of the two approaches:
 
-## 🎯 Success Metrics
+1. Upload any PDF files to the S3 Bucket (national-council-s3-pdfs)
 
-### Technical KPIs
-- ✅ **99.5% uptime** SLA
-- ✅ **< 3 seconds** response time (95th percentile)
-- ✅ **< 1% error rate**
-- ✅ **> 99% API success rate**
+2. Sync the Knowledge Base:
+   - Go to AWS Console > Bedrock > Knowledge bases
+   - Select the knowledge base created by the stack
+   - Click the "Sync data sources" button
+   - Wait for sync to complete (status will show "Available")
 
-### Product KPIs
-- 🎯 **60% adoption** by active instructors (3 months)
-- 🎯 **70% resolution rate** without human escalation
-- 🎯 **4/5 average** user satisfaction rating
-- 🎯 **5+ messages** per user per week
+3. SES Email Verification (Post-Deployment)
+   - An email will be sent from AWS to the provided admin email address for verification.
+   - If you can't find the email, check the Spam folder and verify by clicking the given link.
 
-### Business Impact
-- 📉 **40% reduction** in support tickets
-- ⏱️ **60% faster** time to find information
-- 📈 **15% increase** in instructor activation
-- 💰 **Cost per conversation** tracked and optimized
+5. Add User in Cognito (Post-Deployment)
 
----
+    - AWS Console → Cognito → **User Pools** → `YOUR_USER_POOL_ID`
+    - Select **Users and groups** → **Create user**
+    - Fill in **Username**, **Temporary password**, and required attributes (e.g., email)
+    - Click **Create user** (the user will reset their password on first login)
 
-## 🔒 Security & Compliance
+6. Deploy the Frontend:
+   - Go to AWS Console > AWS Amplify
+   - Select the app created by the stack
+   - Access the application URL provided by Amplify
 
-- ✅ **HIPAA-Compatible** - Sensitive mental health data protection
-- ✅ **WCAG 2.1 Level AA** - Full accessibility compliance
-- ✅ **SOC 2 Type II** - Enterprise security standards
-- ✅ **Data Encryption** - At rest (AWS-managed) and in transit (TLS 1.3)
-- ✅ **Zero Trust Architecture** - Defense in depth
-- ✅ **Regular Audits** - Security and penetration testing
+7. Using the Application:
+   - Once frontend deployment is complete, navigate to the Amplify URL
+   - The chat interface will load with example queries about MHFA training and resources
+   - **No login required** - Chat works immediately in guest mode
+   - Click the **Profile icon** to select your role and view personalized recommendations
+   - Use the **Language toggle** button to switch between English and Spanish
 
----
+## Features
 
-## 🤝 Contributing
+### Personalized Recommendations
+The chatbot provides role-based personalized recommendations to enhance user experience:
 
-This is a private project for The National Council for Mental Wellbeing. Contributing guidelines will be established during development.
+**Target User Roles:**
+- 🎓 **MHFA Instructors** - Certified instructors who deliver training courses
+- 💼 **Internal Staff** - Administrative and support staff managing training operations
+- 👤 **Learners** - Individuals taking MHFA courses for certification
 
----
+**How It Works:**
+1. Click the **Profile icon** (person icon) in the chat header
+2. Select your role from three beautifully designed cards
+3. View personalized quick actions with sample queries
+4. Click any query chip to use it in the chat instantly
+5. Access suggested topics and recent updates relevant to your role
 
-## 📄 License
+**Key Benefits:**
+- ✅ **No login required** - Works with guest access using browser localStorage
+- ✅ **12 quick actions** - 4 per role with 3 sample queries each
+- ✅ **36+ curated queries** - Pre-written questions tailored to each role
+- ✅ **Suggested topics** - 5 relevant topics per role to explore
+- ✅ **Recent updates** - Latest news and announcements per role
+- ✅ **Bilingual support** - Full English and Spanish translations
 
-Proprietary - The National Council for Mental Wellbeing
+For detailed information, see [PERSONALIZED_RECOMMENDATIONS_GUIDE.md](docs/features/PERSONALIZED_RECOMMENDATIONS_GUIDE.md)
 
----
+### Multilingual Support
+Switch between English and Spanish seamlessly:
+- **Language Toggle Button** in chat header with globe icon
+- One-click switch with instant UI updates
+- Preferences saved to localStorage and cookies
+- All UI elements, recommendations, and responses update automatically
+- Tooltips: "Cambiar a Español" / "Switch to English"
 
-## 📧 Contact
+### Sentiment Analysis
+AI-powered sentiment analysis evaluates chat interactions:
+- **4 evaluation factors**: Relevance (30%), Completeness (30%), Clarity (20%), Actionability (20%)
+- **Score ranges**: 0-100 with categorical ratings (Excellent, Good, Acceptable, etc.)
+- **Admin dashboard** displays sentiment trends and low-score conversations
+- Powered by Amazon Bedrock (Nova Lite model)
 
-**Customer Contact**: sunitau@thenationalcouncil.org
-**Organization**: The National Council for Mental Wellbeing
-**Website**: [thenationalcouncil.org](https://www.thenationalcouncil.org)
+For detailed information, see [SENTIMENT_ANALYSIS_EXPLAINED.md](docs/features/SENTIMENT_ANALYSIS_EXPLAINED.md)
 
----
+### Admin Portal Features
+Secure administrative dashboard (requires Cognito authentication):
+- **Document Management** - Upload and manage knowledge base PDFs
+- **Analytics Dashboard** - View chat metrics and sentiment analysis
+- **Escalated Queries** - Manage questions requiring human expert attention
+- **Conversation Logs** - Review detailed chat transcripts with sentiment scores
+- **Email Notifications** - Automated alerts via Amazon SES
 
-## 🙏 Acknowledgments
+For detailed information, see [ADMIN_FEATURES.md](docs/features/ADMIN_FEATURES.md)
 
-- **The National Council for Mental Wellbeing** - Project sponsor and partner
-- **Mental Health First Aid (MHFA)** - Core program being supported
-- **AWS** - Cloud infrastructure and AI services
-- **Anthropic** - Claude AI model via AWS Bedrock
+### Troubleshooting
+1. WebSocket Connection Issues
+- Error: "WebSocket connection failed"
+  - Check if the AWS API Gateway WebSocket API is deployed correctly
+  - Verify the WebSocket URL in the frontend environment variables
+  - Ensure your AWS credentials have appropriate permissions
 
----
+2. Lambda Function Errors
+- Error: "Lambda function timed out"
+  - Check CloudWatch logs for detailed error messages
+  - Increase the Lambda function timeout in the CDK stack
+  - Verify memory allocation is sufficient
 
-**Built with ❤️ to support mental health awareness and education**
+3. AI Response Issues
+- Error: "Knowledge base not responding"
+  - Verify the Bedrock knowledge base is properly configured
+  - Check if the S3 bucket contains the required MHFA data files
+  - Ensure the Lambda function has proper IAM permissions
 
----
+## Data Flow
+The application processes user queries through a multi-stage pipeline that ensures accurate and contextual responses.
 
-*Last Updated: 2025-12-20*
+```ascii
+User Query → WebSocket API → Lambda → Bedrock Agent → Knowledge Base
+     ↑                                     ↓
+     └──────────── Response ←─────── Email Notification
+```
+
+Component interactions:
+1. User submits query through WebSocket connection
+2. Lambda function processes request and invokes Bedrock Agent
+3. Agent queries knowledge base and evaluates confidence
+4. High confidence responses (>90%) are returned directly with citations
+5. Low confidence queries trigger admin notification workflow
+6. Session logs are stored in DynamoDB for analytics
+7. File uploads are processed and ingested into knowledge base
+
+## Infrastructure
+
+![Infrastructure diagram](./docs/infra.jpg)
+
+### Architecture Diagram Explanation
+
+- **User → Amplify Front-End**
+  - **1.1** User submits question and later their email if needed.
+  - **1.9** Amplify returns the Bedrock agent's answer or asks for the email when escalation is needed.
+
+- **Amplify → Amazon API Gateway**
+  - **1.2** API Gateway receives the request from Amplify and acts as the single entry point for back-end services.
+
+- **API Gateway → Amazon Bedrock Agent**
+  - **1.3** Gateway forwards the query to the Bedrock Agent.
+  - **1.4** Agent inspects the query and decides whether it can answer directly from its **Bedrock Knowledge Base**.
+
+- **Bedrock Agent ↔ Knowledge Base (S3 Data Source)**
+  - A **sync-up workflow** keeps reference docs in an **S3 bucket** synchronized with the Knowledge Base.
+  - **1.6** Agent retrieves the answer and returns it to API Gateway (**1.7**), which then responds to Amplify (**1.8**).
+
+- **Human-in-the-Loop Escalation via Amazon SES**
+  - **3.2** If the Agent cannot answer, API Gateway uses **Amazon SES** to email the question (and the user's email) to an **Admin**.
+  - **3.3** Admin receives the email.
+  - **4.1 / 4.2** Admin replies to the user *and* the bot.
+  - **5** Admin's answer is indexed—written to S3 and ingested into the Knowledge Base, improving future responses.
+
+- **Admin Authentication & Document Management**
+  - **6.1 / 7.1** Admin authenticates through **Amazon Cognito** and accesses an Amplify-hosted portal.
+  - **6.3** Within the portal, the Admin uploads or edits docs in the S3 data source feeding the Knowledge Base.
+
+- **Observability & Analytics Pipeline**
+  - **DynamoDB** stores structured logs/metrics from the Bedrock Agent; raw logs are archived in **S3**.
+  - A lightweight **LLM process** mines those S3 logs for insights.
+  - **Dashboard (7.3)** pulls aggregated data from DynamoDB to provide real-time analytics.
+  - **CloudWatch** captures infrastructure-level logs across the entire stack.
+
+- **Data-Flow Summary**
+  1. **Primary path:** *User → Amplify → API Gateway → Bedrock Agent → Knowledge Base/S3 → User*
+  2. **Escalation path:** *API Gateway → SES → Admin → SES → Knowledge Base/S3*
+  3. **Admin management:** *Cognito-authenticated Amplify app → S3 (documents) + DynamoDB/S3 (logs) → Dashboard*
+
+> This architecture combines a serverless web front-end, a Bedrock-powered retrieval agent, human-in-the-loop escalation, and a full observability layer—yielding immediate answers for users while letting admins curate content and monitor system health in one cohesive workflow.
+
+
+Lambda Functions:
+- `adminFile`: Manages document uploads and knowledge base updates
+- `cfEvaluator`: Evaluates chat flow and confidence scores
+- `email`: Handles admin notifications and escalated queries
+- `logclassifier`: Categorizes and analyzes session logs with AI sentiment analysis
+- `websocketHandler`: Manages real-time WebSocket communication
+- `userProfile`: Manages user profiles and personalized recommendations
+- `escalatedQueries`: Handles escalated query workflow and tracking
+
+AWS Services:
+- Bedrock: AI model and knowledge base
+- API Gateway: WebSocket and REST APIs
+- DynamoDB: Session and analytics data
+- S3: Document storage
+- SES: Email notifications
+- Cognito: User authentication
+
+Environment Variables:
+- `REACT_APP_WEBSOCKET_API`: WebSocket API endpoint
+- `REACT_APP_ANALYTICS_API`: Analytics API endpoint
+- `REACT_APP_COGNITO_USER_POOL_ID`: Cognito user pool ID
+- `REACT_APP_COGNITO_CLIENT_ID`: Cognito client ID
