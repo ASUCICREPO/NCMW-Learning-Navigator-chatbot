@@ -19,6 +19,10 @@ The application features a serverless architecture built on AWS services, with r
 - Session logging and sentiment analysis capabilities
 - User profile management with role-specific quick actions
 
+Demo Video:
+
+https://github.com/user-attachments/assets/b0867ff8-0f01-41da-9c28-8dd50713a1e8
+
 ## Repository Structure
 ```
 .
