@@ -19,6 +19,8 @@ import {
 import { useTheme } from "@mui/material/styles";
 import PdfIcon from "../Assets/pdf_logo.svg";
 import MHFALogo from "../Assets/mhfa_logo.png";
+import { DOCUMENTS_API } from "../utilities/constants";
+import axios from "axios";
 
 function BotFileCheckReply({ message, fileName, fileStatus, citations, isLoading, messageId, sessionId, onFeedback }) {
   const theme = useTheme();
@@ -371,9 +373,32 @@ function BotFileCheckReply({ message, fileName, fileStatus, citations, isLoading
                           size="small"
                           variant="outlined"
                           clickable
-                          onClick={() => {
+                          onClick={async (e) => {
+                            e.preventDefault(); // Prevent default link behavior
                             if (ref.source) {
-                              window.open(ref.source, '_blank', 'noopener,noreferrer');
+                              try {
+                                console.log('🔵 Citation clicked, source:', ref.source);
+                                // If S3 URI, fetch presigned URL from backend
+                                if (ref.source.startsWith('s3://')) {
+                                  console.log('🔵 Fetching presigned URL for S3 URI...');
+                                  const response = await axios.post(
+                                    `${DOCUMENTS_API}presigned-url`,
+                                    { s3_uri: ref.source }
+                                  );
+                                  console.log('🔵 Presigned URL response:', response.data);
+                                  const presignedUrl = response.data.presigned_url;
+                                  console.log('🔵 Opening presigned URL:', presignedUrl);
+                                  window.open(presignedUrl, '_blank', 'noopener,noreferrer');
+                                } else {
+                                  // Direct HTTPS URL
+                                  console.log('🔵 Opening direct HTTPS URL:', ref.source);
+                                  window.open(ref.source, '_blank', 'noopener,noreferrer');
+                                }
+                              } catch (error) {
+                                console.error('❌ Error fetching presigned URL:', error);
+                                console.error('❌ Error details:', error.response || error.message);
+                                alert('Unable to open document. Please try again.');
+                              }
                             }
                           }}
                           sx={{

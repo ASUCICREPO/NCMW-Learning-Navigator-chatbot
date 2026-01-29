@@ -7,13 +7,13 @@ env:
   variables:
     STACK_NAME: "national_council_backend"
     ENVIRONMENT: "production"
-    GITHUB_REPO_URL: "https://github.com/OWNER/REPO.git"  # Will be set dynamically
+    GITHUB_REPO_URL: "https://github.com/ASUCICREPO/NCMW-Learning-Navigator-chatbot"
+    GITHUB_OWNER: "ASUCICREPO"
+    GITHUB_REPO: "NCMW-Learning-Navigator-chatbot"
   parameter-store:
-    GITHUB_OWNER: "/learning-navigator/github-owner"
-    GITHUB_REPO: "/learning-navigator/github-repo"
     ADMIN_EMAIL: "/learning-navigator/admin-email"
-    # Optional: GitHub token for private repos
-    # GITHUB_TOKEN: "/learning-navigator/github-token"
+    # Note: This is a public repository at https://github.com/ASUCICREPO/NCMW-Learning-Navigator-chatbot
+    # No GitHub token or credentials required
 
 phases:
   install:
@@ -46,16 +46,14 @@ phases:
 
       # Validate required environment variables
       - |
-        if [ -z "$GITHUB_OWNER" ] || [ -z "$GITHUB_REPO" ] || [ -z "$ADMIN_EMAIL" ]; then
-          echo "ERROR: Required parameters not found!"
+        if [ -z "$ADMIN_EMAIL" ]; then
+          echo "ERROR: Required parameter not found!"
           echo "Please set the following in Parameter Store:"
-          echo "  - /learning-navigator/github-owner"
-          echo "  - /learning-navigator/github-repo"
           echo "  - /learning-navigator/admin-email"
           exit 1
         fi
 
-      - echo "GitHub Repository: $GITHUB_OWNER/$GITHUB_REPO"
+      - echo "GitHub Repository: $GITHUB_REPO_URL"
       - echo "Admin Email: $ADMIN_EMAIL"
 
   build:

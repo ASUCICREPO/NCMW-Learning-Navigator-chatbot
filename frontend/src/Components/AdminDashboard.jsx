@@ -276,9 +276,6 @@ function AdminDashboard() {
                 <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827' }}>
                   Learning Navigator
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#6B7280' }}>
-                  AI-Powered Training Support
-                </Typography>
               </Box>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -592,9 +589,36 @@ function AdminDashboard() {
                 </Typography>
                 {analytics.conversations.length > 0 ? (
                   <Box>
-                    {analytics.conversations
-                      .slice(0, 10)
-                      .map((conv, idx) => (
+                    {(() => {
+                      // Aggregate questions by query text and count frequency
+                      const questionFrequency = {};
+                      analytics.conversations.forEach(conv => {
+                        const query = (conv.query || '').trim();
+                        if (query) {
+                          if (!questionFrequency[query]) {
+                            questionFrequency[query] = {
+                              count: 0,
+                              sentiments: { positive: 0, negative: 0, neutral: 0 },
+                              lastAsked: conv.timestamp
+                            };
+                          }
+                          questionFrequency[query].count += 1;
+                          const sentiment = conv.sentiment || 'neutral';
+                          questionFrequency[query].sentiments[sentiment] = (questionFrequency[query].sentiments[sentiment] || 0) + 1;
+                          // Keep track of most recent timestamp
+                          if (new Date(conv.timestamp) > new Date(questionFrequency[query].lastAsked)) {
+                            questionFrequency[query].lastAsked = conv.timestamp;
+                          }
+                        }
+                      });
+
+                      // Convert to array and sort by frequency (most asked first)
+                      const sortedQuestions = Object.entries(questionFrequency)
+                        .map(([query, data]) => ({ query, ...data }))
+                        .sort((a, b) => b.count - a.count)
+                        .slice(0, 10); // Top 10 most frequent
+
+                      return sortedQuestions.map((item, idx) => (
                         <Box
                           key={idx}
                           sx={{
@@ -607,42 +631,83 @@ function AdminDashboard() {
                             }
                           }}
                         >
-                          <Box sx={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', gap: 2 }}>
                             <Box sx={{ flex: 1 }}>
-                              <Typography variant="body1" sx={{ fontWeight: 600, color: '#111827', mb: 0.5 }}>
-                                {conv.query || 'No query text'}
+                              <Typography variant="body1" sx={{ fontWeight: 600, color: '#111827', mb: 1 }}>
+                                {item.query}
                               </Typography>
-                              <Typography variant="caption" sx={{ color: '#6B7280' }}>
-                                {new Date(conv.timestamp).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </Typography>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                                <Typography variant="caption" sx={{ color: '#6B7280' }}>
+                                  Asked {item.count} {item.count === 1 ? 'time' : 'times'}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#6B7280' }}>
+                                  •
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#6B7280' }}>
+                                  Last asked: {new Date(item.lastAsked).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </Typography>
+                              </Box>
+                              {/* Sentiment breakdown */}
+                              <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                                {item.sentiments.positive > 0 && (
+                                  <Chip
+                                    label={`👍 ${item.sentiments.positive}`}
+                                    size="small"
+                                    sx={{
+                                      background: '#D1FAE5',
+                                      color: '#065F46',
+                                      fontWeight: 600,
+                                      height: '20px',
+                                      fontSize: '0.7rem'
+                                    }}
+                                  />
+                                )}
+                                {item.sentiments.negative > 0 && (
+                                  <Chip
+                                    label={`👎 ${item.sentiments.negative}`}
+                                    size="small"
+                                    sx={{
+                                      background: '#FEE2E2',
+                                      color: '#991B1B',
+                                      fontWeight: 600,
+                                      height: '20px',
+                                      fontSize: '0.7rem'
+                                    }}
+                                  />
+                                )}
+                                {item.sentiments.neutral > 0 && (
+                                  <Chip
+                                    label={`😐 ${item.sentiments.neutral}`}
+                                    size="small"
+                                    sx={{
+                                      background: '#F3F4F6',
+                                      color: '#6B7280',
+                                      fontWeight: 600,
+                                      height: '20px',
+                                      fontSize: '0.7rem'
+                                    }}
+                                  />
+                                )}
+                              </Box>
                             </Box>
                             <Chip
-                              label={conv.sentiment || 'neutral'}
-                              size="small"
+                              label={`#${idx + 1}`}
                               sx={{
-                                background:
-                                  conv.sentiment === 'positive'
-                                    ? '#D1FAE5'
-                                    : conv.sentiment === 'negative'
-                                    ? '#FEE2E2'
-                                    : '#F3F4F6',
-                                color:
-                                  conv.sentiment === 'positive'
-                                    ? '#065F46'
-                                    : conv.sentiment === 'negative'
-                                    ? '#991B1B'
-                                    : '#6B7280',
-                                fontWeight: 600
+                                background: '#064F80',
+                                color: 'white',
+                                fontWeight: 700,
+                                minWidth: '40px'
                               }}
                             />
                           </Box>
                         </Box>
-                      ))}
+                      ));
+                    })()}
                   </Box>
                 ) : (
                   <Box sx={{ textAlign: 'center', py: 4 }}>

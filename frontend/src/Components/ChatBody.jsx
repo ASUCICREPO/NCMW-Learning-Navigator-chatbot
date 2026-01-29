@@ -1002,20 +1002,6 @@ function ChatBody() {
                 />
               </Box>
             </Box>
-
-            {/* Powered by indicator */}
-            <Box mt={{ xs: 1, sm: 1.5 }} textAlign="center">
-              <Typography
-                variant="caption"
-                sx={{
-                  color: (theme) => theme.palette.text.secondary,
-                  fontFamily: 'Calibri, Ideal Sans, Arial, sans-serif',
-                  fontSize: { xs: '0.6875rem', sm: '0.75rem' },
-                }}
-              >
-                Powered by Amazon Bedrock & Claude AI
-              </Typography>
-            </Box>
           </Box>
         </Paper>
         </Box>

@@ -55,24 +55,93 @@ The application features a serverless architecture built on AWS services, with r
 ```
 
 # Deployment Instructions
+
+## ⚡ CloudShell Deploy (Simplest - Recommended)
+
+**Deploy in just 3 commands using AWS CloudShell!** No local setup needed. See [CLOUDSHELL_DEPLOY.md](CLOUDSHELL_DEPLOY.md)
+
+**Prerequisites:** Upload your documents to an S3 bucket first (via AWS Console).
+
+```bash
+# 1. Clone and setup
+git clone https://github.com/ASUCICREPO/NCMW-Learning-Navigator-chatbot.git && cd NCMW-Learning-Navigator-chatbot && chmod +x *.sh
+
+# 2. Configure (set your email and bucket)
+export ADMIN_EMAIL="your-email@domain.com" && export S3_BUCKET="your-bucket-name" && \
+sed -i "s/'national-council-s3-pdfs'/'${S3_BUCKET}'/g" cdk_backend/lib/cdk_backend-stack.ts && \
+aws ssm put-parameter --name "/learning-navigator/admin-email" --value "$ADMIN_EMAIL" --type "String" --overwrite --region us-west-2
+
+# 3. Deploy everything
+./deploy-codebuild.sh
+```
+
+**Total Time:** ~25-30 minutes (automated)
+
+---
+
+## 📚 All Deployment Options
+
+**Choose the method that works best for you:**
+
+| Method | Time | Difficulty | Best For |
+|--------|------|------------|----------|
+| [CloudShell Deploy](CLOUDSHELL_DEPLOY.md) ⚡ | 25-30 min | Easiest | First-time users |
+| [4-Command Local](docs/deployment/4-COMMAND-DEPLOY.md) 🚀 | 30 min | Easy | Developers |
+| [5-Step Manual](docs/deployment/QUICK_DEPLOY.md) 📝 | 2 hours | Moderate | Custom setups |
+| [Comprehensive Guide](docs/deployment/DEPLOYMENT_GUIDE.md) 📚 | 2-3 hours | Advanced | Full control |
+
+**📖 [View All Deployment Documentation](docs/deployment/README.md)** - Complete deployment guide index
+
+---
+
+## 🚀 Alternative: Local Development Deploy
+
+**For developers with AWS CLI already configured.** See [4-COMMAND-DEPLOY.md](docs/deployment/4-COMMAND-DEPLOY.md)
+
+```bash
+# 1. Clone repository
+git clone https://github.com/YOUR_USERNAME/ncwm_chatbot_2.git && cd ncwm_chatbot_2
+
+# 2. Update CDK stack with your S3 bucket name (in cdk_backend/lib/cdk_backend-stack.ts line 69)
+
+# 3. Set parameters and deploy everything
+./setup-params.sh --github-owner YOUR_USERNAME --github-repo ncwm_chatbot_2 --admin-email admin@yourdomain.com
+./deploy-codebuild.sh
+
+# 4. Sync Knowledge Base
+./sync-knowledge-base.sh --kb-id KB_ID --wait
+```
+
+**Total Time:** ~30 minutes (mostly automated)
+
+---
+
+## 🚀 Alternative: 5-Step Manual Deploy
+
+**Prefer step-by-step manual deployment?** See [QUICK_DEPLOY.md](QUICK_DEPLOY.md)
+
+This guide walks you through deploying the chatbot to a new AWS account in approximately 2 hours with detailed explanations for each step.
+
+**For comprehensive documentation:**
+- [CLOUDSHELL_DEPLOY.md](CLOUDSHELL_DEPLOY.md) - ⚡ Simplest CloudShell deployment (~25 min) **RECOMMENDED**
+- [CLOUDSHELL_DEPLOYMENT_EXPLAINED.md](CLOUDSHELL_DEPLOYMENT_EXPLAINED.md) - 📖 Detailed explanation of every deployment step
+- [4-COMMAND-DEPLOY.md](4-COMMAND-DEPLOY.md) - 🚀 Fast local deployment using CodeBuild (~30 min)
+- [QUICK_DEPLOY.md](QUICK_DEPLOY.md) - 📝 5-step manual deployment guide (~2 hours)
+- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - 📚 Complete deployment guide with troubleshooting
+- [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) - ✅ Checkbox-style deployment reference
+
+---
+
 ## Common Prerequisites
 
-- Fork this repository to your own GitHub account (required for deployment and CI/CD):
-  1. Navigate to your forked repository URL
+- **Note:** This repository is public, so no GitHub personal access token is required for deployment.
+
+- Fork this repository to your own GitHub account (recommended for deployment and CI/CD):
+  1. Navigate to https://github.com/YOUR-USERNAME/ncwm_chatbot_2
   2. Click the "Fork" button in the top right corner
   3. Select your GitHub account as the destination
   4. Wait for the forking process to complete
   5. You'll now have your own copy at https://github.com/YOUR-USERNAME/ncwm_chatbot_2
-
-- **(Optional)** Obtain a GitHub personal access token (only required for private repositories):
-  - **Note**: If your repository is public, you can skip this step
-  - For private repositories only:
-    1. Go to GitHub Settings > Developer Settings > Personal Access Tokens > Tokens (classic)
-    2. Click "Generate new token (classic)"
-    3. Give the token a name and select the "repo" and "admin:repo_hook" scope
-    4. Click "Generate token" and save the token securely
-  - For detailed instructions, see:
-    - https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
 
 - Verify your admin email in SES:
   1. AWS Console → SES → Verified Identities
@@ -177,15 +246,7 @@ npm install
 
 4. Bootstrap CDK:
 ```bash
-# For public repositories (recommended):
 cdk bootstrap --all \
-  -c githubOwner=YOUR_GITHUB_USERNAME \
-  -c githubRepo=ncwm_chatbot_2 \
-  -c adminEmail=YOUR_ADMIN_EMAIL
-
-# For private repositories (add githubToken):
-cdk bootstrap --all \
-  -c githubToken=YOUR_GITHUB_TOKEN \
   -c githubOwner=YOUR_GITHUB_USERNAME \
   -c githubRepo=ncwm_chatbot_2 \
   -c adminEmail=YOUR_ADMIN_EMAIL
@@ -193,15 +254,7 @@ cdk bootstrap --all \
 
 5. Deploy the stack:
 ```bash
-# For public repositories (recommended):
 cdk deploy --all \
-  -c githubOwner=YOUR_GITHUB_USERNAME \
-  -c githubRepo=ncwm_chatbot_2 \
-  -c adminEmail=YOUR_ADMIN_EMAIL
-
-# For private repositories (add githubToken):
-cdk deploy --all \
-  -c githubToken=YOUR_GITHUB_TOKEN \
   -c githubOwner=YOUR_GITHUB_USERNAME \
   -c githubRepo=ncwm_chatbot_2 \
   -c adminEmail=YOUR_ADMIN_EMAIL
@@ -409,11 +462,20 @@ Environment Variables:
 - **[Technical Documentation (Simple)](docs/TECHNICAL_DOCUMENTATION_SIMPLE.md)** ⭐ - Concise technical overview with architecture, AWS services, and service connections
 - **[High-Level Design](docs/HIGH_LEVEL_DESIGN.md)** - System architecture with detailed diagrams for stakeholders
 
-### Client Testing Package
+### Deployment Guides
+- **[4-Command Deploy](4-COMMAND-DEPLOY.md)** ⚡ - Fastest automated deployment using CodeBuild (~30 min)
+- **[Quick Deploy Guide](QUICK_DEPLOY.md)** 🚀 - 5-step manual deployment process (~2 hours)
+- **[Complete Deployment Guide](DEPLOYMENT_GUIDE.md)** - Comprehensive deployment documentation with troubleshooting
+- **[Deployment Checklist](DEPLOYMENT_CHECKLIST.md)** - Checkbox-style deployment reference
+- **[Simple Cost Guide](COST_ESTIMATION_SIMPLE.md)** 💰 - Quick cost overview and pricing tiers
+- **[Detailed Cost Analysis](COST_ESTIMATION.md)** 📊 - Complete breakdown and optimization strategies
+
+### Customer & Client Resources
+- **[Customer Deployment Brief](docs/deployment/CUSTOMER_DEPLOYMENT_BRIEF.md)** - Executive overview for clients
+- **[Customer Email Templates](docs/deployment/CUSTOMER_EMAIL_TEMPLATE.md)** - Ready-to-send emails
 - **[Client Testing Package](docs/CLIENT_TESTING_PACKAGE.md)** - Complete guide for client testing
 - **[User Workflows](docs/USER_WORKFLOWS.md)** - 9 detailed step-by-step user interaction flows
 - **[Admin Workflows](docs/ADMIN_WORKFLOWS.md)** - 10 complete admin operation workflows
-- **[Client Email Template](docs/CLIENT_EMAIL_TEMPLATE.md)** - Ready-to-send email templates for client outreach
 - **[Client Package Summary](docs/CLIENT_PACKAGE_SUMMARY.md)** - Quick reference for sending client package
 
 ### Features & Operations

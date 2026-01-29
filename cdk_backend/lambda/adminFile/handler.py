@@ -110,6 +110,9 @@ def lambda_handler(event, context):
             sync_result = sync_knowledge_base()
             return respond(200, {"message": "KB sync kicked off", **sync_result})
 
+        if raw_path == "/presigned-url" and http_method == "POST":
+            return handle_presigned_url(event)
+
         log("No matching route")
         return respond(404, {"error": "Route not found"})
 
@@ -217,4 +220,46 @@ def handle_download_file(raw_path, path_parameters):
         return respond(500, {"error": str(err)})
     except Exception as exc:
         log("DOWNLOAD error            :", exc)
+        return respond(500, {"error": str(exc)})
+
+
+def handle_presigned_url(event):
+    """
+    Generate a presigned URL for an S3 object.
+    Expects JSON body: {"s3_uri": "s3://bucket-name/path/to/file.pdf"}
+    Returns: {"presigned_url": "https://..."}
+    """
+    try:
+        body = json.loads(event.get("body", "{}"))
+        s3_uri = body.get("s3_uri", "")
+
+        if not s3_uri or not s3_uri.startswith("s3://"):
+            return respond(400, {"error": "Invalid s3_uri parameter"})
+
+        # Extract bucket and key from s3://bucket-name/path/to/file
+        parts = s3_uri.replace("s3://", "").split("/", 1)
+        if len(parts) != 2:
+            return respond(400, {"error": "Invalid S3 URI format"})
+
+        bucket = parts[0]
+        key = parts[1]
+
+        log(f"Generating presigned URL for bucket={bucket}, key={key}")
+
+        # Generate presigned URL (valid for 1 hour)
+        presigned_url = s3.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': bucket, 'Key': key},
+            ExpiresIn=3600  # 1 hour
+        )
+
+        log(f"Generated presigned URL: {presigned_url[:100]}...")
+
+        return respond(200, {"presigned_url": presigned_url})
+
+    except ClientError as err:
+        log("PRESIGNED URL ClientError  :", err.response["Error"]["Code"])
+        return respond(500, {"error": str(err)})
+    except Exception as exc:
+        log("PRESIGNED URL error       :", exc)
         return respond(500, {"error": str(exc)})
