@@ -28,12 +28,3 @@ The following estimates are based on actual conversation volume. AWS charges onl
 | AWS Amplify | Web hosting | $2 |
 | Additional Services | Storage, database, notifications | $2 |
 | **Total Estimated Cost** | | **$126** |
-
----
-
-## Important Notes
-
-- **Pay-as-you-go pricing:** Charges reflect actual usage only
-- **No hidden fees:** No licensing costs or per-user charges
-- **Cost controls:** AWS billing alerts can be configured to monitor spending
-- **Free tier:** First 12 months include AWS Free Tier benefits (~$10-15/month credit)
