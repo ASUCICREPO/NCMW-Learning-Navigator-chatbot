@@ -1,55 +1,39 @@
-# Simple Cost Estimation - MHFA Learning Navigator
+# MHFA Learning Navigator - Cost Estimation
+
+## Monthly Operating Costs
+
+The following estimates are based on actual conversation volume. AWS charges only for resources consumed, with no upfront fees or minimum commitments.
+
+### Cost by Usage Volume
+
+| Monthly Conversations | Estimated Monthly Cost |
+|----------------------:|:----------------------:|
+| 1,000 | $25 - $40 |
+| 10,000 | $138 - $208 |
+| 50,000 | $650 - $950 |
+| 100,000+ | $1,200 - $1,700 |
 
 ---
 
-## 💰 Quick Cost Summary
+## Service Breakdown
 
-| Monthly Conversations | Estimated Cost | Cost per Conversation |
-|----------------------|----------------|----------------------|
-| 1,000 | **$25-40** | $0.025-0.040 |
-| 10,000 | **$138-208** | $0.014-0.021 |
-| 50,000 | **$650-950** | $0.013-0.019 |
-| 100,000+ | **$1,200-1,700** | $0.012-0.017 |
+### AWS Infrastructure Components (10,000 conversations/month)
 
----
-
-## 📊 What You're Paying For
-
-### Main Costs (10,000 conversations/month example)
-
-| Service | What It Does | Monthly Cost | % of Total |
-|---------|--------------|--------------|-----------|
-| **Amazon Bedrock (AI)** | Claude 4 Sonnet chatbot responses | $62 | 49% |
-| **AWS Lambda** | Run chatbot code | $26 | 21% |
-| **CloudWatch Logs** | Store conversation logs | $26 | 21% |
-| **API Gateway** | WebSocket connections | $8 | 6% |
-| **AWS Amplify** | Host website | $2 | 2% |
-| **Other** | Storage, database, email | $2 | 2% |
-| **Total** | | **~$126** | **100%** |
-
-## 🔍 Cost Factors
-
-### Higher costs if you have:
-- ✅ Long conversations (5+ messages)
-- ✅ Peak traffic (3x normal during business hours)
-- ✅ Large knowledge base (500+ documents)
-- ✅ Frequent document updates
-- ✅ High logging retention (90+ days)
-
-### Lower costs if you have:
-- ✅ Short conversations (2-3 messages)
-- ✅ Steady traffic (no major spikes)
-- ✅ Smaller knowledge base (100 documents)
-- ✅ Optimized prompts
-- ✅ Reduced log retention (7-14 days)
+| AWS Service | Purpose | Monthly Cost |
+|-------------|---------|-------------:|
+| Amazon Bedrock | AI conversation processing | $62 |
+| AWS Lambda | Application compute | $26 |
+| CloudWatch Logs | System logging and monitoring | $26 |
+| API Gateway | WebSocket communication | $8 |
+| AWS Amplify | Web hosting | $2 |
+| Additional Services | Storage, database, notifications | $2 |
+| **Total Estimated Cost** | | **$126** |
 
 ---
 
-## 📅 Annual Costs
+## Important Notes
 
-| Tier | Monthly | Annual | Annual (with growth) |
-|------|---------|--------|---------------------|
-| Starter | $25-40 | $300-480 | $330-528 |
-| Business | $138-208 | $1,656-2,496 | $1,822-2,746 |
-| Professional | $648-948 | $7,776-11,376 | $8,554-12,514 |
-
+- **Pay-as-you-go pricing:** Charges reflect actual usage only
+- **No hidden fees:** No licensing costs or per-user charges
+- **Cost controls:** AWS billing alerts can be configured to monitor spending
+- **Free tier:** First 12 months include AWS Free Tier benefits (~$10-15/month credit)
