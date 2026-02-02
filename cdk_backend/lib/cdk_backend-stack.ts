@@ -1,15 +1,24 @@
+/**
+ * Learning Navigator - NCMW Chatbot Infrastructure Stack
+ *
+ * This stack deploys the complete infrastructure for the Learning Navigator chatbot,
+ * including AWS Bedrock Agent, Knowledge Base, Lambda functions, API Gateway,
+ * Cognito authentication, and supporting services.
+ *
+ * @module LearningNavigatorStack
+ * @author NCMW Team
+ */
+
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as os from 'os';
-import { aws_bedrock as bedrock2 } from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as apigatewayv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigatewayv2_integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
-import { bedrock as bedrock } from '@cdklabs/generative-ai-cdk-constructs';
+import { bedrock } from '@cdklabs/generative-ai-cdk-constructs';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
-import * as amplify from '@aws-cdk/aws-amplify-alpha';
 import * as path from 'path';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as ses from 'aws-cdk-lib/aws-ses';
@@ -17,75 +26,153 @@ import * as sesActions from 'aws-cdk-lib/aws-ses-actions';
 import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-import * as events   from 'aws-cdk-lib/aws-events';
-import * as targets  from 'aws-cdk-lib/aws-events-targets';
-import { Topic } from '@cdklabs/generative-ai-cdk-constructs/lib/cdk-lib/bedrock/guardrails/guardrail-filters';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 
+/**
+ * Configuration constants for the Learning Navigator stack
+ */
+const CONFIG = {
+  // Bedrock Models
+  BEDROCK_AGENT_MODEL: bedrock.BedrockFoundationModel.ANTHROPIC_CLAUDE_4_SONNET_V1_0,
+  BEDROCK_EMBEDDING_MODEL: bedrock.BedrockFoundationModel.TITAN_EMBED_TEXT_V2_1024,
+
+  // DynamoDB Tables
+  DYNAMODB_SESSION_LOGS_TABLE: 'NCMWDashboardSessionlogs',
+  DYNAMODB_ESCALATED_QUERIES_TABLE: 'NCMWEscalatedQueries',
+  DYNAMODB_USER_PROFILES_TABLE: 'NCMWUserProfiles',
+  DYNAMODB_FEEDBACK_TABLE: 'NCMWResponseFeedback',
+
+  // S3 Buckets
+  KNOWLEDGE_BASE_BUCKET: 'national-council',
+
+  // SES
+  SES_RECEIPT_RULE_SET_NAME: 'learning-navigator-email-rules',
+
+  // Lambda
+  LAMBDA_TIMEOUT_SECONDS: 120,
+  LAMBDA_TIMEOUT_EMAIL: 120,
+
+  // Cognito
+  COGNITO_PASSWORD_MIN_LENGTH: 8,
+
+  // EventBridge Schedule
+  LOGS_CRON_MINUTE: '59',
+  LOGS_CRON_HOUR: '23',
+} as const;
+
+/**
+ * Learning Navigator Infrastructure Stack
+ *
+ * Deploys a complete AI-powered chatbot solution using AWS Bedrock, Lambda,
+ * API Gateway, Cognito, and other AWS services.
+ *
+ * @class LearningNavigatorStack
+ * @extends {cdk.Stack}
+ *
+ * @example
+ * ```bash
+ * cdk deploy \
+ *   -c githubOwner=your-org \
+ *   -c githubRepo=your-repo \
+ *   -c adminEmail=admin@example.com
+ * ```
+ */
 export class LearningNavigatorStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CONTEXT PARAMETERS & VALIDATION
+    // ═══════════════════════════════════════════════════════════════════════════
 
     const githubToken = this.node.tryGetContext('githubToken');
     const githubOwner = this.node.tryGetContext('githubOwner');
     const githubRepo = this.node.tryGetContext('githubRepo');
     const adminEmail = this.node.tryGetContext('adminEmail');
 
-    // Validate required parameters (githubToken is optional for public repos)
-    if (!githubOwner || !githubRepo || !adminEmail) {
-      throw new Error(
-        'Please provide required context values: ' +
-        'githubOwner, githubRepo, and adminEmail.\n' +
-        'Example: cdk deploy ' +
-        '-c githubOwner=your-github-owner ' +
-        '-c githubRepo=your-github-repo ' +
-        '-c adminEmail=alerts@yourdomain.com\n' +
-        'Note: githubToken is optional for public repositories'
-      );
-    }
+    // Validate required parameters
+    this.validateRequiredContext({ githubOwner, githubRepo, adminEmail });
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // INFRASTRUCTURE CONFIGURATION
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    const awsRegion = cdk.Stack.of(this).region;
+    const awsAccountId = cdk.Stack.of(this).account;
+
+    // Detect host architecture for Lambda compilation
+    const hostArchitecture = os.arch();
+    const lambdaArchitecture = hostArchitecture === 'arm64'
+      ? lambda.Architecture.ARM_64
+      : lambda.Architecture.X86_64;
+
+    console.log(`[Stack] AWS Region: ${awsRegion}`);
+    console.log(`[Stack] AWS Account: ${awsAccountId}`);
+    console.log(`[Stack] Lambda Architecture: ${lambdaArchitecture.name}`);
 
     // Create GitHub token secret only if token is provided (for private repos)
-    let githubToken_secret_manager: secretsmanager.Secret | undefined;
     if (githubToken) {
-      githubToken_secret_manager = new secretsmanager.Secret(this, 'GitHubToken2', {
+      new secretsmanager.Secret(this, 'GitHubToken', {
         secretName: 'github-secret-token',
-        description: 'GitHub Personal Access Token for Amplify',
-        secretStringValue: cdk.SecretValue.unsafePlainText(githubToken)
+        description: 'GitHub Personal Access Token for Amplify (optional for public repos)',
+        secretStringValue: cdk.SecretValue.unsafePlainText(githubToken),
       });
     }
 
-    const aws_region = cdk.Stack.of(this).region;
-    const accountId = cdk.Stack.of(this).account;
-    console.log(`AWS Region: ${aws_region}`);
+    // ═══════════════════════════════════════════════════════════════════════════
+    // S3 BUCKETS
+    // ═══════════════════════════════════════════════════════════════════════════
 
-    // detect Architecture
-    const hostArchitecture = os.arch(); 
-    console.log(`Host architecture: ${hostArchitecture}`);
-    
-    const lambdaArchitecture = hostArchitecture === 'arm64' ? lambda.Architecture.ARM_64 : lambda.Architecture.X86_64;
-    console.log(`Lambda architecture: ${lambdaArchitecture}`);
+    /**
+     * Knowledge Base Data Bucket
+     * Existing bucket containing training materials, PDFs, and knowledge base documents
+     */
+    const knowledgeBaseDataBucket = s3.Bucket.fromBucketName(
+      this,
+      'KnowledgeBaseDataBucket',
+      CONFIG.KNOWLEDGE_BASE_BUCKET
+    );
 
-    // Import existing S3 bucket for knowledge base data source
-    const knowledgeBaseDataBucket = s3.Bucket.fromBucketName(this, 'KnowledgeBaseData', 'national-council');
-
-    const emailBucket = new s3.Bucket(this, 'emailBucket', {
+    /**
+     * Email Storage Bucket
+     * Stores incoming emails from SES for processing
+     */
+    const emailBucket = new s3.Bucket(this, 'EmailStorageBucket', {
       enforceSSL: true,
-      removalPolicy: cdk.RemovalPolicy.RETAIN, 
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
-
-    // Create a bucket to store multimodal data extracted from input files
-    const supplementalBucket = new cdk.aws_s3.Bucket(this, "SSucket", {
+    /**
+     * Supplemental Data Bucket
+     * Stores multimodal data extracted from input files for Bedrock Knowledge Base
+     * Must be separate from the data source bucket per AWS requirements
+     */
+    const supplementalBucket = new s3.Bucket(this, 'SupplementalDataBucket', {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       enforceSSL: true,
       autoDeleteObjects: true,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
-    // Create an S3 supplemental data storage location. The multimodal data storage bucket cannot 
-    // be the same as the data source bucket if using an S3 data source
+    /**
+     * Dashboard Logs Bucket
+     * Stores exported logs from CloudWatch for dashboard analytics
+     */
+    const dashboardLogsBucket = new s3.Bucket(this, 'DashboardLogsBucket', {
+      enforceSSL: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+    });
+
+    // Configure supplemental data storage location for Bedrock
     const supplementalS3Storage = bedrock.SupplementalDataStorageLocation.s3({
-      // NO trailing path—just the bucket
-      uri: `s3://${supplementalBucket.bucketName}`
+      uri: `s3://${supplementalBucket.bucketName}`,
     });
     
     const cris_sonnet_4 = bedrock.CrossRegionInferenceProfile.fromConfig({
@@ -111,31 +198,50 @@ export class LearningNavigatorStack extends cdk.Stack {
         parsingStrategy: bedrock.ParsingStrategy.bedrockDataAutomation(),
       });
 
-      const dashboardLogsBucket = new s3.Bucket(this, 'DashboardLogsBucket', {
-        enforceSSL: true,
-        removalPolicy: cdk.RemovalPolicy.RETAIN,
-      });
+      // ═══════════════════════════════════════════════════════════════════════════
+      // DYNAMODB TABLES
+      // ═══════════════════════════════════════════════════════════════════════════
 
+      /**
+       * Session Logs Table
+       * Stores chatbot conversation sessions for analytics and monitoring
+       */
       const sessionLogsTable = new dynamodb.Table(this, 'SessionLogsTable', {
-        tableName: 'NCMWDashboardSessionlogs',
+        tableName: CONFIG.DYNAMODB_SESSION_LOGS_TABLE,
         partitionKey: { name: 'session_id', type: dynamodb.AttributeType.STRING },
-        sortKey:      { name: 'timestamp',  type: dynamodb.AttributeType.STRING },
-        removalPolicy: cdk.RemovalPolicy.DESTROY,  //for production have retain
+        sortKey: { name: 'timestamp', type: dynamodb.AttributeType.STRING },
+        removalPolicy: cdk.RemovalPolicy.DESTROY, // TODO: Use RETAIN for production
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       });
 
-      // Table for escalated queries (admin email notifications)
+      /**
+       * Escalated Queries Table
+       * Stores user queries that require admin follow-up
+       */
       const escalatedQueriesTable = new dynamodb.Table(this, 'EscalatedQueriesTable', {
-        tableName: 'NCMWEscalatedQueries',
+        tableName: CONFIG.DYNAMODB_ESCALATED_QUERIES_TABLE,
         partitionKey: { name: 'query_id', type: dynamodb.AttributeType.STRING },
-        sortKey:      { name: 'timestamp', type: dynamodb.AttributeType.STRING },
-        removalPolicy: cdk.RemovalPolicy.DESTROY,  //for production have retain
+        sortKey: { name: 'timestamp', type: dynamodb.AttributeType.STRING },
+        removalPolicy: cdk.RemovalPolicy.DESTROY, // TODO: Use RETAIN for production
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       });
 
-      // Add GSI for querying by status
+      // Global Secondary Index for querying escalated queries by status
       escalatedQueriesTable.addGlobalSecondaryIndex({
         indexName: 'StatusIndex',
         partitionKey: { name: 'status', type: dynamodb.AttributeType.STRING },
         sortKey: { name: 'timestamp', type: dynamodb.AttributeType.STRING },
+      });
+
+      /**
+       * User Profile Table
+       * Stores user preferences and personalized recommendations
+       */
+      const userProfileTable = new dynamodb.Table(this, 'UserProfileTable', {
+        tableName: CONFIG.DYNAMODB_USER_PROFILES_TABLE,
+        partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+        removalPolicy: cdk.RemovalPolicy.DESTROY, // TODO: Use RETAIN for production
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       });
 
     const bedrockRoleAgent = new iam.Role(this, 'BedrockRole3', {
@@ -793,18 +899,14 @@ export class LearningNavigatorStack extends cdk.Stack {
       authorizationType: apigateway.AuthorizationType.COGNITO,
     });
 
-    // ──────────────────────────────────────────────────────────────────────────────
-    // User Profile & Personalized Recommendations
-    // ──────────────────────────────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════════
+    // USER PROFILE & PERSONALIZED RECOMMENDATIONS
+    // ═══════════════════════════════════════════════════════════════════════════
 
-    // DynamoDB table for user profiles
-    const userProfileTable = new dynamodb.Table(this, 'UserProfileTable', {
-      tableName: 'NCMWUserProfiles',
-      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
-      removalPolicy: cdk.RemovalPolicy.DESTROY,  // For production, use RETAIN
-    });
-
-    // Lambda function for user profile management
+    /**
+     * User Profile Management Lambda
+     * Handles user profile creation, updates, and personalized recommendations
+     */
     const userProfileFn = new lambda.Function(this, 'UserProfileFn', {
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'handler.lambda_handler',
@@ -937,5 +1039,46 @@ export class LearningNavigatorStack extends cdk.Stack {
       value: AdminApi.url,
       description: 'Admin API Gateway endpoint URL',
     });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PRIVATE HELPER METHODS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Validates required CDK context parameters
+   *
+   * @private
+   * @param {object} params - Context parameters to validate
+   * @throws {Error} If required parameters are missing
+   */
+  private validateRequiredContext(params: {
+    githubOwner: string;
+    githubRepo: string;
+    adminEmail: string;
+  }): void {
+    const { githubOwner, githubRepo, adminEmail } = params;
+
+    if (!githubOwner || !githubRepo || !adminEmail) {
+      throw new Error(
+        '❌ Missing required context values\n\n' +
+        'Required parameters:\n' +
+        '  • githubOwner: GitHub organization/owner name\n' +
+        '  • githubRepo: GitHub repository name\n' +
+        '  • adminEmail: Administrator email address\n\n' +
+        'Usage:\n' +
+        '  cdk deploy \\\n' +
+        '    -c githubOwner=your-github-owner \\\n' +
+        '    -c githubRepo=your-github-repo \\\n' +
+        '    -c adminEmail=alerts@yourdomain.com\n\n' +
+        'Note: githubToken is optional for public repositories'
+      );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(adminEmail)) {
+      throw new Error(`❌ Invalid email format: ${adminEmail}`);
+    }
   }
 }
