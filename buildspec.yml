@@ -117,6 +117,20 @@ phases:
           echo "Using existing Amplify App ID - $AMPLIFY_APP_ID"
         fi
       - echo "Deploying to Amplify App - $AMPLIFY_APP_ID"
+      - |
+        echo "Checking if main branch exists..."
+        BRANCH_EXISTS=$(aws amplify list-branches --app-id $AMPLIFY_APP_ID --region $AWS_DEFAULT_REGION --query "branches[?branchName=='main'].branchName | [0]" --output text 2>/dev/null || echo "")
+        if [ "$BRANCH_EXISTS" = "None" ] || [ -z "$BRANCH_EXISTS" ]; then
+          echo "Creating main branch..."
+          aws amplify create-branch \
+            --app-id $AMPLIFY_APP_ID \
+            --branch-name main \
+            --region $AWS_DEFAULT_REGION \
+            --enable-auto-build false
+          echo "Branch 'main' created successfully"
+        else
+          echo "Branch 'main' already exists"
+        fi
       - cd build
       - zip -q -r ../build.zip .
       - cd ..
