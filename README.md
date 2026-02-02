@@ -39,7 +39,7 @@ Learning Navigator is a conversational AI assistant designed to provide comprehe
 
 ## Architecture Diagram
 
-![Infrastructure diagram](./docs/infra.jpg)
+<img width="1156" height="878" alt="image" src="https://github.com/user-attachments/assets/f03c5711-8624-44b1-a170-d3c8aea7eaa0" />
 
 The application implements a serverless architecture on AWS, combining:
 
