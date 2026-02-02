@@ -52,7 +52,6 @@ phases:
           echo "  - /learning-navigator/admin-email"
           exit 1
         fi
-
       - echo "GitHub Repository: $GITHUB_REPO_URL"
       - echo "Admin Email: $ADMIN_EMAIL"
 
