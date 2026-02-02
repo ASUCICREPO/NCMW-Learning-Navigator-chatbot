@@ -42,7 +42,9 @@ phases:
       - echo "PHASE 1 - Backend Deployment (CDK)"
       - echo "=========================================="
       - echo "Build phase started on `date`"
-      - cd cdk_backend
+      - pwd
+      - ls -la
+      - cd $CODEBUILD_SRC_DIR/cdk_backend
       - echo "Installing backend dependencies..."
       - npm install
       - echo "Synthesizing CDK stack..."
@@ -53,7 +55,7 @@ phases:
       - cdk deploy --context environment=$ENVIRONMENT --context githubOwner=$GITHUB_OWNER --context githubRepo=$GITHUB_REPO --context adminEmail=$ADMIN_EMAIL --require-approval never --outputs-file outputs.json
       - echo "Backend deployment completed!"
       - cat outputs.json
-      - cd ..
+      - cd $CODEBUILD_SRC_DIR
       - cp cdk_backend/outputs.json ./outputs.json
       - echo "Extracting API endpoints..."
       - export WEBSOCKET_URL=$(node -p "const o=require('./outputs.json'); const s=Object.keys(o)[0]; o[s]['WebSocketURL']||''")
@@ -69,7 +71,7 @@ phases:
       - echo "=========================================="
       - echo "PHASE 2 - Frontend Build"
       - echo "=========================================="
-      - cd frontend
+      - cd $CODEBUILD_SRC_DIR/frontend
       - echo "Creating production environment configuration..."
       - echo "REACT_APP_ENV=production" > .env.production
       - echo "REACT_APP_API_ENDPOINT=$API_GATEWAY_URL" >> .env.production
@@ -100,7 +102,9 @@ phases:
       - echo "PHASE 3 - Deploying to Amplify"
       - echo "=========================================="
       - echo "Post-build phase started on `date`"
-      - cd frontend
+      - pwd
+      - ls -la
+      - cd $CODEBUILD_SRC_DIR/frontend
       - test -n "$AMPLIFY_APP_ID" || (echo "ERROR - No Amplify App ID found" && exit 1)
       - echo "Deploying to Amplify App - $AMPLIFY_APP_ID"
       - cd build
@@ -136,7 +140,7 @@ phases:
       - echo "REST API - $API_GATEWAY_URL"
       - echo "Admin Email - $ADMIN_EMAIL"
       - echo "=========================================="
-      - cd ..
+      - cd $CODEBUILD_SRC_DIR
       - echo "{\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"environment\":\"$ENVIRONMENT\",\"amplify_url\":\"https://main.$AMPLIFY_URL\",\"websocket_url\":\"$WEBSOCKET_URL\",\"api_gateway_url\":\"$API_GATEWAY_URL\",\"user_pool_id\":\"$USER_POOL_ID\",\"admin_email\":\"$ADMIN_EMAIL\"}" > deployment-info.json
       - cat deployment-info.json
       - echo "Deployment pipeline completed successfully!"
