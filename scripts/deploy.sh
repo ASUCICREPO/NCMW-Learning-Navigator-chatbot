@@ -1,206 +1,363 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
 
-# --------------------------------------------------
-# 1. Prompt for all required values
-# --------------------------------------------------
+# NCWM Chatbot Deployment Script
+# This script automates the deployment process for a new AWS account
+#
+# Usage:
+#   ./deploy.sh --github-owner YOUR_USERNAME --github-repo REPO_NAME --admin-email EMAIL@DOMAIN.COM
+#
+# Optional:
+#   --github-token TOKEN     # For private repositories
+#   --bucket-name NAME       # Custom S3 bucket name
+#   --region REGION          # AWS region (default: us-west-2)
+#   --skip-bootstrap         # Skip CDK bootstrap if already done
 
-# 1) Prompt for GITHUB_URL if unset
-if [ -z "${GITHUB_URL:-}" ]; then
-  read -rp "Enter GitHub repository URL (e.g. https://github.com/OWNER/REPO or git@github.com:OWNER/REPO.git): " GITHUB_URL
+set -e  # Exit on error
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Default values
+REGION="us-west-2"
+SKIP_BOOTSTRAP=false
+BUCKET_NAME=""
+
+# Functions
+print_success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+
+print_info() {
+    echo -e "${BLUE}ℹ️  $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+print_header() {
+    echo ""
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BLUE}  $1${NC}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+}
+
+check_command() {
+    if ! command -v $1 &> /dev/null; then
+        print_error "$1 is not installed. Please install it first."
+        exit 1
+    fi
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --github-owner)
+            GITHUB_OWNER="$2"
+            shift 2
+            ;;
+        --github-repo)
+            GITHUB_REPO="$2"
+            shift 2
+            ;;
+        --admin-email)
+            ADMIN_EMAIL="$2"
+            shift 2
+            ;;
+        --github-token)
+            GITHUB_TOKEN="$2"
+            shift 2
+            ;;
+        --bucket-name)
+            BUCKET_NAME="$2"
+            shift 2
+            ;;
+        --region)
+            REGION="$2"
+            shift 2
+            ;;
+        --skip-bootstrap)
+            SKIP_BOOTSTRAP=true
+            shift
+            ;;
+        --help)
+            echo "Usage: ./deploy.sh --github-owner USERNAME --github-repo REPO --admin-email EMAIL"
+            echo ""
+            echo "Required:"
+            echo "  --github-owner     GitHub username or organization"
+            echo "  --github-repo      GitHub repository name"
+            echo "  --admin-email      Admin email for notifications"
+            echo ""
+            echo "Optional:"
+            echo "  --github-token     GitHub personal access token (for private repos)"
+            echo "  --bucket-name      Custom S3 bucket name (default: auto-generated)"
+            echo "  --region           AWS region (default: us-west-2)"
+            echo "  --skip-bootstrap   Skip CDK bootstrap step"
+            echo "  --help             Show this help message"
+            exit 0
+            ;;
+        *)
+            print_error "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
+# Validate required arguments
+if [ -z "$GITHUB_OWNER" ] || [ -z "$GITHUB_REPO" ] || [ -z "$ADMIN_EMAIL" ]; then
+    print_error "Missing required arguments"
+    echo "Usage: ./deploy.sh --github-owner USERNAME --github-repo REPO --admin-email EMAIL"
+    echo "Use --help for more information"
+    exit 1
 fi
 
-# 2) Normalize URL (strip .git and any trailing slash)
-clean_url=${GITHUB_URL%.git}
-clean_url=${clean_url%/}
+# Auto-generate bucket name if not provided
+if [ -z "$BUCKET_NAME" ]; then
+    BUCKET_NAME="${GITHUB_OWNER}-${GITHUB_REPO}-kb-docs-$(date +%s)"
+    print_info "Auto-generated bucket name: $BUCKET_NAME"
+fi
 
-# 3) Extract the path part (owner/repo) for HTTPS or SSH URLs
-if [[ $clean_url =~ ^https://github\.com/([^/]+/[^/]+)$ ]]; then
-  path="${BASH_REMATCH[1]}"
-elif [[ $clean_url =~ ^git@github\.com:([^/]+/[^/]+)$ ]]; then
-  path="${BASH_REMATCH[1]}"
+# Print configuration
+print_header "Deployment Configuration"
+echo "GitHub Owner:     $GITHUB_OWNER"
+echo "GitHub Repo:      $GITHUB_REPO"
+echo "Admin Email:      $ADMIN_EMAIL"
+echo "S3 Bucket:        $BUCKET_NAME"
+echo "AWS Region:       $REGION"
+echo "Skip Bootstrap:   $SKIP_BOOTSTRAP"
+
+# Confirmation
+echo ""
+read -p "Continue with deployment? (y/n) " -n 1 -r
+echo ""
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    print_warning "Deployment cancelled"
+    exit 0
+fi
+
+# Check prerequisites
+print_header "Checking Prerequisites"
+
+check_command "aws"
+check_command "node"
+check_command "npm"
+check_command "cdk"
+check_command "git"
+
+print_success "All required tools are installed"
+
+# Verify AWS credentials
+print_info "Verifying AWS credentials..."
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text 2>&1) || {
+    print_error "AWS credentials not configured. Run 'aws configure' first."
+    exit 1
+}
+print_success "AWS Account ID: $ACCOUNT_ID"
+
+# Check Bedrock model access
+print_info "Checking Bedrock model access..."
+print_warning "Note: This requires manual verification in AWS Console"
+print_info "Go to: https://console.aws.amazon.com/bedrock/ → Model access"
+read -p "Have you enabled Claude, Titan, and Nova models? (y/n) " -n 1 -r
+echo ""
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    print_error "Please enable Bedrock models first and re-run this script"
+    exit 1
+fi
+
+# Create S3 bucket
+print_header "Creating S3 Bucket"
+print_info "Creating bucket: $BUCKET_NAME"
+
+if aws s3 ls "s3://$BUCKET_NAME" 2>&1 | grep -q 'NoSuchBucket'; then
+    aws s3 mb "s3://$BUCKET_NAME" --region "$REGION"
+    print_success "Bucket created"
+
+    # Enable versioning
+    aws s3api put-bucket-versioning \
+        --bucket "$BUCKET_NAME" \
+        --versioning-configuration Status=Enabled
+    print_success "Versioning enabled"
+
+    # Enable encryption
+    aws s3api put-bucket-encryption \
+        --bucket "$BUCKET_NAME" \
+        --server-side-encryption-configuration '{
+            "Rules": [{
+                "ApplyServerSideEncryptionByDefault": {
+                    "SSEAlgorithm": "AES256"
+                }
+            }]
+        }'
+    print_success "Encryption enabled"
 else
-  echo "Unable to parse owner/repo from '$GITHUB_URL'"
-  read -rp "Enter GitHub owner manually: " GITHUB_OWNER
-  read -rp "Enter GitHub repo  manually: " GITHUB_REPO
-  echo "→ Using GITHUB_OWNER=$GITHUB_OWNER"
-  echo "→ Using GITHUB_REPO=$GITHUB_REPO"
-  exit 0
+    print_info "Bucket already exists, skipping creation"
 fi
 
-# 4) Split into owner and repo
-GITHUB_OWNER=${path%%/*}
-GITHUB_REPO=${path##*/}
+# Update CDK stack with bucket name
+print_header "Updating CDK Stack Configuration"
+print_info "Updating bucket name in cdk_backend-stack.ts..."
 
-# 5) Confirm detection
-echo "Detected GitHub Owner: $GITHUB_OWNER"
-echo "Detected GitHub Repo:  $GITHUB_REPO"
-read -rp "Is this correct? (y/n): " CONFIRM
-CONFIRM=$(printf '%s' "$CONFIRM" | tr '[:upper:]' '[:lower:]')
+# Backup original file
+cp cdk_backend/lib/cdk_backend-stack.ts cdk_backend/lib/cdk_backend-stack.ts.backup
 
-if [[ "$CONFIRM" != "y" && "$CONFIRM" != "yes" ]]; then
-  read -rp "Enter GitHub owner manually: " GITHUB_OWNER
-  read -rp "Enter GitHub repo  manually: " GITHUB_REPO
-fi
+# Replace bucket name (line 69)
+sed -i.tmp "s/'national-council-s3-pdfs'/'$BUCKET_NAME'/g" cdk_backend/lib/cdk_backend-stack.ts
+rm -f cdk_backend/lib/cdk_backend-stack.ts.tmp
 
-# 6) Continue with your CDK flow
-echo "→ Final GITHUB_OWNER=$GITHUB_OWNER"
-echo "→ Final GITHUB_REPO=$GITHUB_REPO"
+print_success "CDK stack updated"
 
-# 2) Same for PROJECT_NAME
-if [ -z "${PROJECT_NAME:-}" ]; then
-  read -rp "Enter the CodeBuild project name (e.g. test123 ): " PROJECT_NAME
-fi
+# Install dependencies
+print_header "Installing Dependencies"
 
-# 3) And for each CDK context var…
-if [ -z "${GITHUB_TOKEN:-}" ]; then
-  read -rp "Enter CDK context githubToken (Please check out the documentation for how to obtain githubToken): " GITHUB_TOKEN
-fi
+print_info "Installing CDK dependencies..."
+cd cdk_backend
+npm install
+print_success "CDK dependencies installed"
 
-if [ -z "${ADMIN_EMAIL:-}" ]; then
-  read -rp "Enter administrator e-mail address where emails will be sent to (context adminEmail): " ADMIN_EMAIL
-fi
+print_info "Installing frontend dependencies..."
+cd ../frontend
+npm install
+print_success "Frontend dependencies installed"
+cd ..
 
-if [ -z "${ACTION:-}" ]; then
-  read -rp "Would you like to [deploy] or [destroy] the stacks? Type deploy or destroy " ACTION
-  ACTION=$(printf '%s' "$ACTION" | tr '[:upper:]' '[:lower:]')
-fi
+# CDK Bootstrap
+if [ "$SKIP_BOOTSTRAP" = false ]; then
+    print_header "Bootstrapping CDK"
+    print_info "Bootstrapping AWS environment..."
 
-if [[ "$ACTION" != "deploy" && "$ACTION" != "destroy" ]]; then
-  echo "Invalid choice: '$ACTION'. Please run again and choose deploy or destroy."
-  exit 1
-fi
-
-# --------------------------------------------------
-# 2. Ensure IAM service role exists
-# --------------------------------------------------
-
-ROLE_NAME="${PROJECT_NAME}-service-role"
-echo "Checking for IAM role: $ROLE_NAME"
-
-if aws iam get-role --role-name "$ROLE_NAME" >/dev/null 2>&1; then
-  echo "✓ IAM role exists"
-  ROLE_ARN=$(aws iam get-role --role-name "$ROLE_NAME" --query 'Role.Arn' --output text)
+    cd cdk_backend
+    cdk bootstrap "aws://$ACCOUNT_ID/$REGION"
+    print_success "CDK bootstrapped"
+    cd ..
 else
-  echo "✱ Creating IAM role: $ROLE_NAME"
-  TRUST_DOC='{
-    "Version":"2012-10-17",
-    "Statement":[{
-      "Effect":"Allow",
-      "Principal":{"Service":"codebuild.amazonaws.com"},
-      "Action":"sts:AssumeRole"
-    }]
-  }'
-
-  ROLE_ARN=$(aws iam create-role \
-    --role-name "$ROLE_NAME" \
-    --assume-role-policy-document "$TRUST_DOC" \
-    --query 'Role.Arn' --output text)
-
-  echo "Attaching AdministratorAccess policy..."
-  aws iam attach-role-policy \
-    --role-name "$ROLE_NAME" \
-    --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
-
-  # Wait for propagation
-  echo "✓ IAM role created"
-  echo "Waiting for IAM role to propagate for 10 seconds..."
-  sleep 10
+    print_info "Skipping CDK bootstrap (--skip-bootstrap flag)"
 fi
 
-# --------------------------------------------------
-# 3. Create CodeBuild project
-# --------------------------------------------------
+# Deploy CDK stack
+print_header "Deploying Backend Infrastructure"
+print_warning "This will take 15-20 minutes..."
 
-echo "Creating CodeBuild project: $PROJECT_NAME"
+cd cdk_backend
 
-# --------------------------------------------------
-# Build environment with explicit environmentVariables
-# --------------------------------------------------
+# Build CDK context
+CDK_CONTEXT="-c githubOwner=$GITHUB_OWNER -c githubRepo=$GITHUB_REPO -c adminEmail=$ADMIN_EMAIL"
+if [ ! -z "$GITHUB_TOKEN" ]; then
+    CDK_CONTEXT="$CDK_CONTEXT -c githubToken=$GITHUB_TOKEN"
+fi
 
-ENVIRONMENT='{
-  "type": "LINUX_CONTAINER",
-  "image": "aws/codebuild/amazonlinux-x86_64-standard:5.0",
-  "computeType": "BUILD_GENERAL1_SMALL",
-  "environmentVariables": [
-    {
-      "name":  "GITHUB_TOKEN",
-      "value": "'"$GITHUB_TOKEN"'",
-      "type":  "PLAINTEXT"
-    },
-    {
-      "name":  "GITHUB_OWNER",
-      "value": "'"$GITHUB_OWNER"'",
-      "type":  "PLAINTEXT"
-    },
-    {
-      "name":  "GITHUB_REPO",
-      "value": "'"$GITHUB_REPO"'",
-      "type":  "PLAINTEXT"
-    },
-    {
-      "name":  "ADMIN_EMAIL",
-      "value": "'"$ADMIN_EMAIL"'",
-      "type":  "PLAINTEXT"
-    },
-    {
-      "name":  "ACTION",
-      "value": "'"$ACTION"'",
-      "type":  "PLAINTEXT"
-    }
-  ]
-}'
+# Deploy
+print_info "Starting CDK deployment..."
+cdk deploy $CDK_CONTEXT --require-approval never
 
-# No artifacts
-ARTIFACTS='{"type":"NO_ARTIFACTS"}'
-
-# Source from GitHub
-SOURCE='{"type":"GITHUB","location":"'"$GITHUB_URL"'"}'
-
-# Which branch to build
-
-echo "Creating CodeBuild project '$PROJECT_NAME' using GitHub repo '$GITHUB_URL' ..."
-aws codebuild create-project \
-  --name "$PROJECT_NAME" \
-  --source "$SOURCE" \
-  --artifacts "$ARTIFACTS" \
-  --environment "$ENVIRONMENT" \
-  --service-role "$ROLE_ARN" \
-  --output json \
-  --no-cli-pager
-
+# Check deployment status
 if [ $? -eq 0 ]; then
-  echo "✓ CodeBuild project '$PROJECT_NAME' created successfully."
+    print_success "Backend deployed successfully"
 else
-  echo "✗ Failed to create CodeBuild project. Please verify AWS CLI permissions and parameters."
-  exit 1
+    print_error "CDK deployment failed"
+    # Restore backup
+    mv cdk_backend/lib/cdk_backend-stack.ts.backup cdk_backend/lib/cdk_backend-stack.ts
+    exit 1
 fi
 
-# --------------------------------------------------
-# 4. Start the build
-# --------------------------------------------------
+# Get stack outputs
+print_header "Retrieving Stack Outputs"
 
-echo "Starting build for project '$PROJECT_NAME'..."
-aws codebuild start-build \
-  --project-name "$PROJECT_NAME" \
-  --no-cli-pager \
-  --output json
+WEBSOCKET_URL=$(aws cloudformation describe-stacks \
+    --stack-name LearningNavigatorStack \
+    --region "$REGION" \
+    --query 'Stacks[0].Outputs[?OutputKey==`WebSocketApiEndpoint`].OutputValue' \
+    --output text)
 
-if [ $? -eq 0 ]; then
-  echo "✓ Build started successfully."
-else
-  echo "✗ Failed to start the build."
-  exit 1
-fi
+AMPLIFY_URL=$(aws cloudformation describe-stacks \
+    --stack-name LearningNavigatorStack \
+    --region "$REGION" \
+    --query 'Stacks[0].Outputs[?OutputKey==`AmplifyAppUrl`].OutputValue' \
+    --output text)
 
-# --------------------------------------------------
-# 5. List existing CodeBuild projects
-# --------------------------------------------------
+KB_ID=$(aws cloudformation describe-stacks \
+    --stack-name LearningNavigatorStack \
+    --region "$REGION" \
+    --query 'Stacks[0].Outputs[?OutputKey==`KnowledgeBaseId`].OutputValue' \
+    --output text)
 
-echo "Current CodeBuild projects:"
-aws codebuild list-projects --output table
+AGENT_ID=$(aws cloudformation describe-stacks \
+    --stack-name LearningNavigatorStack \
+    --region "$REGION" \
+    --query 'Stacks[0].Outputs[?OutputKey==`AgentId`].OutputValue' \
+    --output text)
 
-# --------------------------------------------------
-# End of script
-# --------------------------------------------------
-exit 0
+# Save outputs to file
+cat > deployment-outputs.txt << EOF
+NCWM Chatbot Deployment Outputs
+================================
+Deployment Date: $(date)
+AWS Account: $ACCOUNT_ID
+AWS Region: $REGION
+
+S3 Bucket: $BUCKET_NAME
+WebSocket API: $WEBSOCKET_URL
+Amplify URL: $AMPLIFY_URL
+Knowledge Base ID: $KB_ID
+Agent ID: $AGENT_ID
+
+GitHub Owner: $GITHUB_OWNER
+GitHub Repo: $GITHUB_REPO
+Admin Email: $ADMIN_EMAIL
+EOF
+
+print_success "Stack outputs saved to deployment-outputs.txt"
+
+# Display important information
+print_header "Deployment Summary"
+echo ""
+print_success "Backend deployment complete!"
+echo ""
+echo "Important URLs:"
+echo "  WebSocket API:    $WEBSOCKET_URL"
+echo "  Amplify Frontend: $AMPLIFY_URL"
+echo ""
+echo "Knowledge Base:"
+echo "  Bucket:     s3://$BUCKET_NAME"
+echo "  KB ID:      $KB_ID"
+echo "  Agent ID:   $AGENT_ID"
+echo ""
+
+# Next steps
+print_header "Next Steps"
+echo ""
+echo "1. Upload documents to Knowledge Base:"
+echo "   aws s3 sync ./your-documents/ s3://$BUCKET_NAME/pdfs/ --region $REGION"
+echo ""
+echo "2. Sync Knowledge Base (after uploading documents):"
+echo "   ./sync-knowledge-base.sh --kb-id $KB_ID --region $REGION"
+echo ""
+echo "3. Update frontend configuration:"
+echo "   - Edit frontend/src/utilities/constants.js"
+echo "   - Update WEBSOCKET_API with: $WEBSOCKET_URL"
+echo ""
+echo "4. Access your chatbot:"
+echo "   - Frontend: $AMPLIFY_URL"
+echo "   - Admin Portal: $AMPLIFY_URL/admin"
+echo ""
+echo "5. Create admin user:"
+echo "   Follow instructions in DEPLOYMENT_GUIDE.md (Section: Post-Deployment Configuration)"
+echo ""
+
+print_success "Deployment complete! 🎉"
+print_info "Review deployment-outputs.txt for all details"
+
+# Cleanup backup
+rm -f cdk_backend/lib/cdk_backend-stack.ts.backup
+
+cd ..

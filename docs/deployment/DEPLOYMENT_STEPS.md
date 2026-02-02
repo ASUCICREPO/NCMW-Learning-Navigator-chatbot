@@ -109,7 +109,7 @@ You'll see a terminal prompt like: `[cloudshell-user@ip-xxx ~]$`
 ```bash
 git clone https://github.com/ASUCICREPO/NCMW-Learning-Navigator-chatbot.git && \
 cd NCMW-Learning-Navigator-chatbot && \
-chmod +x *.sh
+chmod +x scripts/*.sh
 ```
 
 **What this does - Line by Line:**
@@ -131,10 +131,10 @@ chmod +x *.sh
 - **What happens:** Your terminal prompt will change to show you're in the project folder
 - **Output you'll see:** Prompt changes to `[cloudshell-user@ip-xxx NCMW-Learning-Navigator-chatbot]$`
 
-#### Line 3: `chmod +x *.sh`
-- **What:** Makes all shell scripts executable (runnable)
+#### Line 3: `chmod +x scripts/*.sh`
+- **What:** Makes all shell scripts in the scripts folder executable (runnable)
 - **Why:** Downloaded scripts aren't executable by default for security
-- **What happens:** Adds execute permissions to `deploy-codebuild.sh`, `setup-params.sh`, `sync-knowledge-base.sh`, and `deploy.sh`
+- **What happens:** Adds execute permissions to all scripts in the `scripts/` folder
 - **Output you'll see:** Nothing (success is silent)
 
 **Summary:** After this command, you have all the code and scripts ready to run in CloudShell.
@@ -235,7 +235,7 @@ aws ssm put-parameter \
 **Copy and paste this command:**
 
 ```bash
-./deploy-codebuild.sh
+./scripts/deploy-codebuild.sh
 ```
 
 **What this does:**
@@ -601,7 +601,7 @@ After deployment completes, you need to do 2 more things:
 KB_ID="KB123ABC"  # Replace with your actual ID
 
 # Sync documents
-./sync-knowledge-base.sh --kb-id ${KB_ID} --wait
+./scripts/sync-knowledge-base.sh --kb-id ${KB_ID} --wait
 ```
 
 **What happens:**

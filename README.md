@@ -63,14 +63,12 @@ For detailed deployment instructions, including prerequisites and step-by-step g
 git clone https://github.com/ASUCICREPO/NCMW-Learning-Navigator-chatbot.git
 cd NCMW-Learning-Navigator-chatbot
 
-# Configure your admin email and S3 bucket
+# Configure your admin email
 export ADMIN_EMAIL="your-email@domain.com"
-export S3_BUCKET="your-bucket-name"
-aws ssm put-parameter --name "/learning-navigator/admin-email" --value "$ADMIN_EMAIL" --type "String" --overwrite --region us-west-2
+./scripts/setup-params.sh --admin-email "$ADMIN_EMAIL"
 
 # Deploy everything
-chmod +x deploy-codebuild.sh
-./deploy-codebuild.sh
+./scripts/deploy-codebuild.sh
 ```
 
 **Total Time:** ~25-30 minutes (automated)
@@ -118,8 +116,12 @@ chmod +x deploy-codebuild.sh
 │   ├── API_DOCUMENTATION.md
 │   └── infra.jpg             # Architecture diagram
 ├── scripts/                  # Utility scripts
-│   ├── deploy-codebuild.sh   # Automated deployment
-│   └── setup-params.sh       # Parameter configuration
+│   ├── deploy-codebuild.sh   # Automated deployment via CodeBuild
+│   ├── deploy.sh             # Manual deployment script
+│   ├── deploy-from-cloudshell.sh  # CloudShell deployment
+│   ├── setup-params.sh       # Parameter configuration
+│   ├── sync-knowledge-base.sh     # KB sync utility
+│   └── create-admin-user.sh  # Create Cognito admin users
 ├── LICENSE.md
 └── README.md
 ```
@@ -216,9 +218,3 @@ For complete credits, see [docs/CREDITS.md](docs/CREDITS.md).
 
 This project is licensed under a Proprietary Software License - see [docs/LICENSE.md](docs/LICENSE.md) for details.
 
-**Copyright © 2024-2026 National Council for Mental Wellbeing. All rights reserved.**
-
----
-
-**Version**: 1.0
-**Last Updated**: February 2026

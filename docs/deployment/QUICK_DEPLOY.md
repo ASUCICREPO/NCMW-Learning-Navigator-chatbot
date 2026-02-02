@@ -399,7 +399,7 @@ aws amplify list-jobs \
 For detailed info, see:
 - 📖 **Full Guide:** [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
 - 📋 **Checklist:** [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)
-- 🤖 **Automated:** `./deploy.sh --help`
+- 🤖 **Automated:** `./scripts/deploy.sh --help`
 
 ---
 

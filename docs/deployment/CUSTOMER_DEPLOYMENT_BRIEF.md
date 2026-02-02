@@ -137,12 +137,12 @@ The repository includes automated deployment scripts:
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `setup-params.sh` | Configure AWS parameters | `./setup-params.sh --github-owner USERNAME --github-repo REPO --admin-email EMAIL` |
-| `deploy-codebuild.sh` | Deploy via CodeBuild | `./deploy-codebuild.sh` |
-| `sync-knowledge-base.sh` | Sync documents to KB | `./sync-knowledge-base.sh --kb-id KB_ID --wait` |
-| `deploy.sh` | Manual CDK deployment | `./deploy.sh` |
+| `setup-params.sh` | Configure AWS parameters | `./scripts/setup-params.sh --admin-email EMAIL` |
+| `deploy-codebuild.sh` | Deploy via CodeBuild | `./scripts/deploy-codebuild.sh` |
+| `sync-knowledge-base.sh` | Sync documents to KB | `./scripts/sync-knowledge-base.sh --kb-id KB_ID --wait` |
+| `deploy.sh` | Manual CDK deployment | `./scripts/deploy.sh --admin-email EMAIL` |
 
-All scripts are located in the repository root directory.
+All scripts are located in the `scripts/` directory.
 
 ---
 
