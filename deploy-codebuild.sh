@@ -71,6 +71,7 @@ if [ "$PROJECT_EXISTS" = "$PROJECT_NAME" ]; then
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         aws codebuild delete-project --name "$PROJECT_NAME" --region $REGION
         print_success "Deleted existing project"
+        PROJECT_EXISTS=""  # Reset so new project gets created
     else
         print_info "Using existing project"
     fi
