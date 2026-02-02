@@ -66,7 +66,7 @@ export class LearningNavigatorStack extends cdk.Stack {
     console.log(`Lambda architecture: ${lambdaArchitecture}`);
 
     // Import existing S3 bucket for knowledge base data source
-    const knowledgeBaseDataBucket = s3.Bucket.fromBucketName(this, 'KnowledgeBaseData', 'national-council-s3-pdfs');
+    const knowledgeBaseDataBucket = s3.Bucket.fromBucketName(this, 'KnowledgeBaseData', 'national-council');
 
     const emailBucket = new s3.Bucket(this, 'emailBucket', {
       enforceSSL: true,
@@ -380,10 +380,12 @@ export class LearningNavigatorStack extends cdk.Stack {
       },
     })
 
-    // Create SES Receipt Rule Set
-    const sesRuleSet = new ses.ReceiptRuleSet(this, 'EmailReceiptRuleSet', {
-      receiptRuleSetName: 'learning-navigator-email-rules',
-    });
+    // Import existing SES Receipt Rule Set instead of creating new one
+    const sesRuleSet = ses.ReceiptRuleSet.fromReceiptRuleSetName(
+      this,
+      'EmailReceiptRuleSet',
+      'learning-navigator-email-rules'
+    );
 
     // Use admin email for receiving replies instead of requiring a custom domain
     const sesRule = sesRuleSet.addRule('ProcessIncomingEmail', {
@@ -588,7 +590,7 @@ export class LearningNavigatorStack extends cdk.Stack {
     const kbBucketWithNotifications = s3.Bucket.fromBucketName(
       this,
       'KnowledgeBaseDataWithNotifications',
-      'national-council-s3-pdfs'
+      'national-council'
     ) as s3.Bucket;
 
     // Add S3 event notifications to trigger the Lambda function
@@ -607,7 +609,7 @@ export class LearningNavigatorStack extends cdk.Stack {
       principal: new iam.ServicePrincipal('s3.amazonaws.com'),
       action: 'lambda:InvokeFunction',
       sourceAccount: this.account,
-      sourceArn: `arn:aws:s3:::national-council-s3-pdfs`,
+      sourceArn: `arn:aws:s3:::national-council`,
     });
 
 
